@@ -17,10 +17,14 @@ int main(int ac, char **av) {
         return 1;
     }
     port = std::atoi(av[1]);
-    if ((!isNum(av[1])) || (port < 6660 && port > 6669)) {
+    if (!isNum(av[1])) {
         std::cerr << "Error: Invalid port: try 6660-6669" << std::endl;
         return 1;
     }
     pass = av[2];
-    
+    Server* test = new Server(port, pass);
+    test->run();
+    delete test;
+
+    return 0;
 }
