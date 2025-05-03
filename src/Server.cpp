@@ -100,6 +100,7 @@ void Server::run() {
                         _pollFds.erase(_pollFds.begin() + i);
                         --i;
                     }
+                    memset(buf, 0, 1024);
                 }
             }
         }
