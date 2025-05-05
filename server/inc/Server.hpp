@@ -15,4 +15,20 @@
 #include <unistd.h>
 #include <poll.h>
 
-void    StartServer();
+class Server
+{
+private:
+    int _listening_socket;
+    std::vector<pollfd> _poll_fds;
+
+public:
+    void startServer();
+    void createSocket();
+    void initAdress();
+    void startListen();
+    void runPoll();
+    void handleNewConect();
+    Server();
+    ~Server();
+};
+
