@@ -1,6 +1,13 @@
 #include "../inc/Server.hpp"
 #include <cstring>
 
+void Server::_makeNonBlock(int sock_fd)
+{
+    if (fcntl(sock_fd, F_SETFL, O_NONBLOCK) < 0) {
+        std::cerr <<"Erorr: fcntl(F_SETFL, O_NONBLOCK) failed";
+    }
+}
+
 Server::Server() {}
 
 void Server::createSocket()
@@ -11,6 +18,7 @@ void Server::createSocket()
         std::cerr << "Socket couldn't be created" << std::endl;
         exit(EXIT_FAILURE);
     }
+    _makeNonBlock(_listening_socket);
 }
 
 void Server::initAdress()
@@ -65,6 +73,7 @@ void Server::runPoll()
                     std::cerr << "Error: accept has failed" << std::endl;
                     exit(EXIT_FAILURE);
                 }
+                _makeNonBlock(new_socket);
                 pollfd new_conexion;
                 new_conexion.fd = new_socket;
                 new_conexion.events = POLLIN;
