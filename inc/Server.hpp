@@ -14,13 +14,15 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <poll.h>
+#include <fcntl.h>
 
 class Server
 {
 private:
     int _listening_socket;
     std::vector<pollfd> _poll_fds;
-
+private:
+    void _makeNonBlock(int sock_fd);
 public:
     void startServer();
     void createSocket();
