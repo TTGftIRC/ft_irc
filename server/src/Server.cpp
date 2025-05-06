@@ -52,7 +52,7 @@ void Server::runPoll()
 {
     pollfd server_fd;
     server_fd.fd = _listening_socket;
-    server_fd.events = POLLIN;
+    server_fd.events = POLLIN | POLLOUT;
     _poll_fds.push_back(server_fd); // first elem of the pollfd will be the server which will be waiting for new events
     while (true)
     {
@@ -76,11 +76,11 @@ void Server::runPoll()
                 _makeNonBlock(new_socket);
                 pollfd new_conexion;
                 new_conexion.fd = new_socket;
-                new_conexion.events = POLLIN;
+                new_conexion.events = POLLIN | POLLOUT;
                 _poll_fds.push_back(new_conexion);
             }
         }
-        for (size_t i = 0; i < _poll_fds.size(); i++)
+        for (size_t i = 1; i < _poll_fds.size(); i++)
         {
             if (_poll_fds[i].revents & POLLIN)
             {
@@ -103,6 +103,13 @@ void Server::runPoll()
                     std::cout << "Error: receiving data" << std::endl;
                 }
             }
+            if (_poll_fds[i].revents & POLLOUT)
+            {
+                std::string welcomemsg = "Welcome to the server\n";
+                size_t bytes_to_send = send(_poll_fds[i].fd, welcomemsg.c_str(), strlen(welcomemsg.c_str()), 0);
+                if
+            }
+            
         }
     }
 }
