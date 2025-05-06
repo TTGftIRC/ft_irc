@@ -74,6 +74,7 @@ void Server::runPoll()
                     exit(EXIT_FAILURE);
                 }
                 _makeNonBlock(new_socket);
+                _clients.insert(std::make_pair(new_socket, Client(new_socket)));
                 pollfd new_conexion;
                 new_conexion.fd = new_socket;
                 new_conexion.events = POLLIN | POLLOUT;
@@ -107,9 +108,8 @@ void Server::runPoll()
             {
                 std::string welcomemsg = "Welcome to the server\n";
                 size_t bytes_to_send = send(_poll_fds[i].fd, welcomemsg.c_str(), strlen(welcomemsg.c_str()), 0);
-                if
+                (void)bytes_to_send;
             }
-            
         }
     }
 }
