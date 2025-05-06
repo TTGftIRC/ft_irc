@@ -108,9 +108,8 @@ void Server::runPoll()
             {
                 std::string welcomemsg = "Welcome to the server\n";
                 size_t bytes_to_send = send(_poll_fds[i].fd, welcomemsg.c_str(), strlen(welcomemsg.c_str()), 0);
-                if
+                (void)bytes_to_send;
             }
-            
         }
     }
 }
