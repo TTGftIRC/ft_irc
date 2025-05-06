@@ -1,29 +1,29 @@
-SRC			= src/main.cpp src/Server.cpp
+NAME = ircserve
+CC = c++
+CFLAGZ = -Wall -Wextra -Werror -std=c++98 -Iinclude -g
+SRCS = main.cpp server/src/Server.cpp
+OBJS = $(SRCS:.cpp=.o)
 
-CXX			= @c++
+GREEN = \033[0;32m
+RESET = \033[0m
+RED = \033[0;31m
 
-CXXFLAGS	= -Wall -Werror -Wextra -std=c++98
+# Compilation rule
+%.o: %.cpp
+	@$(CC) $(CFLAGZ) -c $< -o $@
 
-RM			= @rm -f
+all: $(NAME)
 
-OBJS		= $(SRC:.cpp=.o)
-
-NAME		= irc
-
-%.o:		%.cpp
-				$(CXX) $(CXXFLAGS) -c $< -o $@
-
-all:		$(NAME)
-
-$(NAME):	$(OBJS)
-				$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
+$(NAME): $(OBJS)
+	@$(CC) $(CFLAGZ) -o $(NAME) $(OBJS)
+	@echo "$(GREEN)✔ Successfully compiled $(NAME)$(RESET)"
 
 clean:
-				$(RM) $(OBJS)
+	@rm -f $(OBJS)
+	@echo "$(RED)✔ Successfully cleaned object files$(RED)"
 
-fclean:		clean
-				$(RM) $(NAME)
+fclean: clean
+	@rm -f $(NAME)
+	@echo "$(RED)✔ Successfully cleaned executable $(RED)"
 
-re:			fclean all
-
-.PHONY:		all clean fclean re
+re: fclean all
