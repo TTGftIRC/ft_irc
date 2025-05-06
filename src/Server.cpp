@@ -74,6 +74,7 @@ void Server::runPoll()
                     exit(EXIT_FAILURE);
                 }
                 _makeNonBlock(new_socket);
+                _clients.insert(std::make_pair(new_socket, Client(new_socket)));
                 pollfd new_conexion;
                 new_conexion.fd = new_socket;
                 new_conexion.events = POLLIN;

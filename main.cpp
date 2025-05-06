@@ -1,4 +1,4 @@
-#include "server/inc/Server.hpp"
+#include "inc/Server.hpp"
 
 int main()
 {
