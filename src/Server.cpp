@@ -107,9 +107,9 @@ void Server::runPoll()
                 {
                     std::string buff_copy(buffer, bytes_read);
                     //process the string
-                    for (size_t i = 0; i < _poll_fds.size(); i++)
+                    for (size_t j = 0; j < _poll_fds.size(); i++)
                     {
-                        
+                        int targ_fd = 
                     }
                 }
                 else if (bytes_read == 0)
@@ -126,17 +126,17 @@ void Server::runPoll()
             }
             if (_poll_fds[i].revents & POLLOUT)
             {
-                std::string welcomemsg = "Welcome to the server\n";
-                int bytes_to_send = send(_poll_fds[i].fd, welcomemsg.c_str(), strlen(welcomemsg.c_str()), 0);
-                _poll_fds[i].fd &= ~POLLOUT;
-                if (bytes_to_send > 0)
-                {
-                    std::cout << bytes_to_send << "\n";
-                }
-                else if (bytes_to_send < 0)
-                {
-                    std::cerr << "Error: couldn't send msg" << std::endl;
-                }
+                // std::string welcomemsg = "Welcome to the server\n";
+                // int bytes_to_send = send(_poll_fds[i].fd, welcomemsg.c_str(), strlen(welcomemsg.c_str()), 0);
+                // _poll_fds[i].fd &= ~POLLOUT;
+                // if (bytes_to_send > 0)
+                // {
+                //     // std::cout << bytes_to_send << "\n";
+                // }
+                // else if (bytes_to_send < 0)
+                // {
+                //     std::cerr << "Error: couldn't send msg" << std::endl;
+                // }
             }
         }
     }
