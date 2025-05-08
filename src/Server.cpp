@@ -55,6 +55,8 @@ void Server::startListen()
     std::cout << "Server is now listening on port 8080...." << std::endl;
 }
 
+
+
 void Server::runPoll()
 {
     pollfd server_fd;
@@ -106,13 +108,15 @@ void Server::runPoll()
                     std::string buff_copy(buffer, bytes_read);
 
                     std::cout << buffer << "\n";
-                    // for (size_t j = 0; j < _poll_fds.size(); j++)
-                    // {
-                    //     int target_fd = _poll_fds[j].fd;
-                    //     if (target_fd != _poll_fds[i].fd)
-                    //     {
-                    //     }
-                    // }
+                    for (size_t j = 0; j < _poll_fds.size(); j++)
+                    {
+                        int target_fd = _poll_fds[j].fd;
+                        if (target_fd == _poll_fds[i].fd)
+                        {
+                            _clients[target_fd].AppendToBuffer(buff_copy);
+                            _poll_fds[i].fd |= POLLOUT;
+                        }
+                    }
                 }
                 else if (bytes_read == 0)
                 {
