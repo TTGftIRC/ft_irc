@@ -106,12 +106,12 @@ void Server::runPoll()
                     std::cout << "Error: receiving data" << std::endl;
                 }
             }
-            if (_poll_fds[i].revents & POLLOUT)
-            {
-                std::string welcomemsg = "Welcome to the server\n";
-                size_t bytes_to_send = send(_poll_fds[i].fd, welcomemsg.c_str(), strlen(welcomemsg.c_str()), 0);
-                (void)bytes_to_send;
-            }
+            // if (_poll_fds[i].revents & POLLOUT)
+            // {
+            //     std::string welcomemsg = "Welcome to the server\n";
+            //     size_t bytes_to_send = send(_poll_fds[i].fd, welcomemsg.c_str(), strlen(welcomemsg.c_str()), 0);
+            //     (void)bytes_to_send;
+            // }
         }
     }
 }

@@ -17,11 +17,13 @@ class Client
         const std::string& getUsername(void);
         const std::string& getRealname(void);
         const std::string& getHostname(void);
+        bool getAuth(void);
 
         //setters
         void setNickname(const std::string& nickname);
         void setUsername(const std::string& username);
         void setRealname(const std::string& realname);
+        void setAuth(bool authorized);
 
         Client(int client_fd, const std::string& hostname);
         ~Client();

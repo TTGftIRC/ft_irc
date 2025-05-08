@@ -24,6 +24,10 @@ const std::string& Client::getHostname(void) {
     return _hostname;
 }
 
+bool Client::getAuth(void) {
+    return _authorized;
+}
+
 void Client::setNickname(const std::string& nickname) {
     _nickname = nickname;
 }
@@ -34,6 +38,10 @@ void Client::setUsername(const std::string& username) {
 
 void Client::setRealname(const std::string& realname) {
     _realname = realname;
+}
+
+void Client::setAuth(bool authorized) {
+    _authorized = authorized;
 }
 
 Client::~Client() {
