@@ -81,7 +81,7 @@ void Server::runPoll()
                 exit(EXIT_FAILURE);
             }
             _makeNonBlock(new_socket);
-            // _clients.insert(std::make_pair(new_socket, Client(new_socket))); //ask grisha why using map since the key and also the value will be the same fd
+            _clients.insert(std::make_pair(new_socket, Client(new_socket))); //ask grisha why using map since the key and also the value will be the same fd
             pollfd new_conexion;
             new_conexion.fd = new_socket;
             new_conexion.events = POLLIN;
@@ -111,8 +111,9 @@ void Server::runPoll()
                     for (size_t j = 0; j < _poll_fds.size(); j++)
                     {
                         int target_fd = _poll_fds[j].fd;
-                        if (target_fd == _poll_fds[i].fd)
+                        if (target_fd != _poll_fds[i].fd)
                         {
+                            std::cout <<"here\n";
                             _clients[target_fd].AppendToBuffer(buff_copy);
                             _poll_fds[i].fd |= POLLOUT;
                         }
@@ -134,11 +135,10 @@ void Server::runPoll()
             {
                 std::string welcomemsg = "Welcome to the server\n";
                 int bytes_to_send = send(_poll_fds[i].fd, welcomemsg.c_str(), strlen(welcomemsg.c_str()), 0);
-                _poll_fds[i].fd &= ~POLLOUT;
                 if (bytes_to_send > 0)
                 {
-                    // std::cout << bytes_to_send << "\n";
-                    //trimite la cloent
+                    std::cout << bytes_to_send << "\n";
+                    _poll_fds[i].events &= ~POLLOUT;
                 }
                 else if (bytes_to_send < 0)
                 {
