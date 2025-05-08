@@ -66,15 +66,17 @@ void Server::runPoll()
             if (_poll_fds[0].fd == _listening_socket)
             {
                 // handle new client conexions
-                socklen_t addr_len = sizeof(sockaddr_in);
-                int new_socket = accept(_poll_fds[0].fd, NULL, &addr_len);
+                sockaddr_in client_addr;
+                socklen_t addr_len = sizeof(client_addr);
+                int new_socket = accept(_poll_fds[0].fd, reinterpret_cast<sockaddr *>(&client_addr), &addr_len);
                 if (new_socket == -1)
                 {
                     std::cerr << "Error: accept has failed" << std::endl;
                     exit(EXIT_FAILURE);
                 }
                 _makeNonBlock(new_socket);
-                _clients.insert(std::make_pair(new_socket, Client(new_socket)));
+                std::string client_ip = inet_ntoa(client_addr.sin_addr);
+                _clients.insert(std::make_pair(new_socket, Client(new_socket, client_ip)));
                 pollfd new_conexion;
                 new_conexion.fd = new_socket;
                 new_conexion.events = POLLIN | POLLOUT;
