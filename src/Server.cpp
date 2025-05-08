@@ -70,26 +70,24 @@ void Server::runPoll()
         }
         if (_poll_fds[0].revents & POLLIN)
         {
-            if (_poll_fds[0].fd == _listening_socket)
+            // handle new client conexions
+            socklen_t addr_len = sizeof(sockaddr_in);
+            int new_socket = accept(_poll_fds[0].fd, NULL, &addr_len);
+            if (new_socket == -1)
             {
-                // handle new client conexions
-                socklen_t addr_len = sizeof(sockaddr_in);
-                int new_socket = accept(_poll_fds[0].fd, NULL, &addr_len);
-                if (new_socket == -1)
-                {
-                    std::cerr << "Error: accept has failed" << std::endl;
-                    exit(EXIT_FAILURE);
-                }
-                _makeNonBlock(new_socket);
-                _clients.insert(std::make_pair(new_socket, Client(new_socket)));
-                pollfd new_conexion;
-                new_conexion.fd = new_socket;
-                new_conexion.events = POLLIN;
-                _poll_fds.push_back(new_conexion);
+                std::cerr << "Error: accept has failed" << std::endl;
+                exit(EXIT_FAILURE);
             }
+            _makeNonBlock(new_socket);
+            // _clients.insert(std::make_pair(new_socket, Client(new_socket))); //ask grisha why using map since the key and also the value will be the same fd
+            pollfd new_conexion;
+            new_conexion.fd = new_socket;
+            new_conexion.events = POLLIN;
+            _poll_fds.push_back(new_conexion);
         }
         for (size_t i = 1; i < _poll_fds.size(); i++)
         {
+            Client curr(_poll_fds[i].fd);
             if (_poll_fds[i].revents & POLLHUP)
             {
                 std::cout << "Client has been disconnected !" << std::endl;
@@ -106,11 +104,15 @@ void Server::runPoll()
                 if (bytes_read > 0)
                 {
                     std::string buff_copy(buffer, bytes_read);
-                    //process the string
-                    for (size_t j = 0; j < _poll_fds.size(); i++)
-                    {
-                        int targ_fd = 
-                    }
+
+                    std::cout << buffer << "\n";
+                    // for (size_t j = 0; j < _poll_fds.size(); j++)
+                    // {
+                    //     int target_fd = _poll_fds[j].fd;
+                    //     if (target_fd != _poll_fds[i].fd)
+                    //     {
+                    //     }
+                    // }
                 }
                 else if (bytes_read == 0)
                 {
@@ -126,17 +128,18 @@ void Server::runPoll()
             }
             if (_poll_fds[i].revents & POLLOUT)
             {
-                // std::string welcomemsg = "Welcome to the server\n";
-                // int bytes_to_send = send(_poll_fds[i].fd, welcomemsg.c_str(), strlen(welcomemsg.c_str()), 0);
-                // _poll_fds[i].fd &= ~POLLOUT;
-                // if (bytes_to_send > 0)
-                // {
-                //     // std::cout << bytes_to_send << "\n";
-                // }
-                // else if (bytes_to_send < 0)
-                // {
-                //     std::cerr << "Error: couldn't send msg" << std::endl;
-                // }
+                std::string welcomemsg = "Welcome to the server\n";
+                int bytes_to_send = send(_poll_fds[i].fd, welcomemsg.c_str(), strlen(welcomemsg.c_str()), 0);
+                _poll_fds[i].fd &= ~POLLOUT;
+                if (bytes_to_send > 0)
+                {
+                    // std::cout << bytes_to_send << "\n";
+                    //trimite la cloent
+                }
+                else if (bytes_to_send < 0)
+                {
+                    std::cerr << "Error: couldn't send msg" << std::endl;
+                }
             }
         }
     }
