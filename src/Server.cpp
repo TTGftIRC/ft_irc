@@ -55,7 +55,7 @@ void Server::startListen()
     std::cout << "Server is now listening on port 8080...." << std::endl;
 }
 
-
+// void 
 
 void Server::runPoll()
 {
@@ -72,24 +72,29 @@ void Server::runPoll()
         }
         if (_poll_fds[0].revents & POLLIN)
         {
-            // handle new client conexions
-            socklen_t addr_len = sizeof(sockaddr_in);
-            int new_socket = accept(_poll_fds[0].fd, NULL, &addr_len);
-            if (new_socket == -1)
+            if (_poll_fds[0].fd == _listening_socket)
             {
-                std::cerr << "Error: accept has failed" << std::endl;
-                exit(EXIT_FAILURE);
+                // handle new client conexions
+                sockaddr_in client_addr;
+                socklen_t addr_len = sizeof(client_addr);
+                int new_socket = accept(_poll_fds[0].fd, reinterpret_cast<sockaddr *>(&client_addr), &addr_len);
+                if (new_socket == -1)
+                {
+                    std::cerr << "Error: accept has failed" << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                _makeNonBlock(new_socket);
+                std::string client_ip = inet_ntoa(client_addr.sin_addr);
+                _clients.insert(std::make_pair(new_socket, Client(new_socket, client_ip)));
+                pollfd new_conexion;
+                new_conexion.fd = new_socket;
+                new_conexion.events = POLLIN | POLLOUT;
+                _poll_fds.push_back(new_conexion);
             }
-            _makeNonBlock(new_socket);
-            _clients.insert(std::make_pair(new_socket, Client(new_socket))); //ask grisha why using map since the key and also the value will be the same fd
-            pollfd new_conexion;
-            new_conexion.fd = new_socket;
-            new_conexion.events = POLLIN;
-            _poll_fds.push_back(new_conexion);
         }
         for (size_t i = 1; i < _poll_fds.size(); i++)
         {
-            Client curr(_poll_fds[i].fd);
+            Client &curr = _clients[_poll_fds[i].fd];
             if (_poll_fds[i].revents & POLLHUP)
             {
                 std::cout << "Client has been disconnected !" << std::endl;
@@ -106,16 +111,14 @@ void Server::runPoll()
                 if (bytes_read > 0)
                 {
                     std::string buff_copy(buffer, bytes_read);
-
                     std::cout << buffer << "\n";
                     for (size_t j = 0; j < _poll_fds.size(); j++)
                     {
                         int target_fd = _poll_fds[j].fd;
                         if (target_fd != _poll_fds[i].fd)
                         {
-                            std::cout <<"here\n";
                             _clients[target_fd].AppendToBuffer(buff_copy);
-                            _poll_fds[i].fd |= POLLOUT;
+                            _poll_fds[j].events |= POLLOUT;
                         }
                     }
                 }
@@ -133,16 +136,20 @@ void Server::runPoll()
             }
             if (_poll_fds[i].revents & POLLOUT)
             {
-                std::string welcomemsg = "Welcome to the server\n";
-                int bytes_to_send = send(_poll_fds[i].fd, welcomemsg.c_str(), strlen(welcomemsg.c_str()), 0);
-                if (bytes_to_send > 0)
+                if (!curr._ack_msg)
                 {
-                    std::cout << bytes_to_send << "\n";
-                    _poll_fds[i].events &= ~POLLOUT;
-                }
-                else if (bytes_to_send < 0)
-                {
-                    std::cerr << "Error: couldn't send msg" << std::endl;
+                    std::string welcomemsg = "Welcome to the server\n";
+                    int bytes_to_send = send(_poll_fds[i].fd, welcomemsg.c_str(), strlen(welcomemsg.c_str()), 0);
+                    if (bytes_to_send > 0)
+                    {
+                        std::cout << bytes_to_send << "\n";
+                        _poll_fds[i].events &= ~POLLOUT;
+                        curr._ack_msg = true;
+                    }
+                    else if (bytes_to_send < 0)
+                    {
+                        std::cerr << "Error: couldn't send msg" << std::endl;
+                    }
                 }
             }
         }
