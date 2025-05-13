@@ -8,9 +8,9 @@ Channel::Channel(const std::string& name) : _name(name) {
 Channel::~Channel() {
     std::cout << ORANGE << "Channel " << this->_name << " has been deleted!" << RESET << std::endl;
     
-    std::map<std::string, Client*>::iterator it;                    // don't know yet if i need this, worst chase scenario it's some useless extra lines of code
+    std::vector<Client*>::iterator it;                    // don't know yet if i need this, worst chase scenario it's some useless extra lines of code
     for (it = _clients.begin(); it != _clients.end(); ++it) {
-        delete it->second;
+        delete *it;
     }
     _clients.clear();
 }
@@ -39,24 +39,34 @@ bool Channel::isTopicLocked() const { return this->_topicLocked; }
 // bool Channel::addClient(Client* client, const std::string& key) {}
 // void Channel::removeClient(const std::string& nickname) {}
 bool Channel::hasClient(const std::string& nickname) const {
-    if (this->_clients.find(nickname) == _clients.end()) {
-        return false;
+    std::vector<Client*>::const_iterator it;
+    for (it = _clients.begin(); it != _clients.end(); ++it) {
+        if ((*it)->getNickname() == nickname) {
+            return true;
+        }
     }
-    return true;
+    return false;
 }
 
 
-// bool Channel::addOperator(const std::string& nickname) {}
-// void Channel::removeOperator(const std::string& nickname) {}
+bool Channel::addOperator(const std::string& nickname) {
+    return _operators.insert(nickname).second;
+    //std::set.insert returns a std::pair<iterator, bool>, so the .second tells you if the insertion was succesful
+}
+
+bool Channel::removeOperator(const std::string& nickname) {
+    return _operators.erase(nickname) > 0; // 1 if the operator was succesfully removed, 0 if the nickname wasn't an op in the first place
+}
+
 bool Channel::isOperator(const std::string& nickname) const {
-    if (this->_operators.find(nickname) == _operators.end()) {
-        return false;
-    }
-    return true;
+    return _operators.find(nickname) != _operators.end();
 }
 
 
-// void Channel::invite(const std::string& nickname) {}
+void Channel::invite(const std::string& nickname) {
+    _invited.insert(nickname);
+}
+
 bool Channel::isInvited(const std::string& nickname) const {
     if (_invited.find(nickname) == _invited.end()) {
         return false;
@@ -64,12 +74,16 @@ bool Channel::isInvited(const std::string& nickname) const {
     return true;
 }
 
-// Modes
-// void Channel::setPassword(const std::string& password) {}
-// void Channel::removePassword() {}
-// void Channel::setUserLimit(int limit) {}
-// void Channel::SetInviteOnly(bool on) {}
-// void Channel::SetTopicLock(bool on) {}
+
+void Channel::setPassword(const std::string& password) { _password = password;}
+
+void Channel::removePassword() { _password.clear(); }
+
+void Channel::setUserLimit(int limit) { _userLimit = limit; }
+
+void Channel::SetInviteOnly(bool on) { _inviteOnly = on; }
+
+void Channel::SetTopicLock(bool on) { _topicLocked = on; }
 
 //Messaging
 // void Channel::broadcast(const std::string& message, const std::string& senderNick) {}

@@ -16,6 +16,7 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#include <set>
 #include "Client.hpp"
 
 class Client;
