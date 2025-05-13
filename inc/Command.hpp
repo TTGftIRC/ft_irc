@@ -1,5 +1,6 @@
 #pragma once
 #include "Server.hpp"
+#include <set>
 
 class Server;
 class Client;
@@ -10,11 +11,13 @@ class Client;
 // then client who is calling the command
 
 struct parsedCmd {
-    std::string cmd;
-    std::vector<std::string> args;
-    Client* srcClient;
+    std::string cmd;  //command itself
+    std::vector<std::string> args;  // all arguments, including channel names and trailing messages
+    std::set<std::string> channels; // only args starting with # (#general)
+    Client* srcClient; // who sent the command
 };
-
+//!!!!!! maybe later on we can change the channels container from vector to set, to avoid duplicates, but that is extra
+// parsing.... don't think we need that
 //maybe we can do a switch case later on using enums
 
 enum cmds {
@@ -34,7 +37,7 @@ enum cmds {
 class ICommand {
     public:
         virtual ~ICommand();
-        virtual void execute(Server& server, const parsedCmd& _parsedCmd);
+        virtual void execute(Server& server, const parsedCmd& _parsedCmd) const = 0;
 };
 
 //next encapsulated command which we are going to do with polymorphism (just more classes)
@@ -43,6 +46,46 @@ class ICommand {
 
 //I will do just a example command (incorrect behaviour anyways because we don't have parser yet)
 
+class PassCommand : public ICommand {
+    void execute(Server& server, const parsedCmd& _parsedCmd);
+};
+
 class NickCommand : public ICommand {
+    void execute(Server& server, const parsedCmd& _parsedCmd);
+};
+
+class UserCommand : public ICommand {
+    void execute(Server& server, const parsedCmd& _parsedCmd);
+};
+
+class JoinCommand : public ICommand {
+    void execute(Server& server, const parsedCmd& _parsedCmd);
+};
+
+class PartCommand : public ICommand {
+    void execute(Server& server, const parsedCmd& _parsedCmd);
+};
+
+class PrivmsgCommand : public ICommand {
+    void execute(Server& server, const parsedCmd& _parsedCmd);
+};
+
+class QuitCommand : public ICommand {
+    void execute(Server& server, const parsedCmd& _parsedCmd);
+};
+
+class KickCommand : public ICommand {
+    void execute(Server& server, const parsedCmd& _parsedCmd);
+};
+
+class InviteCommand : public ICommand {
+    void execute(Server& server, const parsedCmd& _parsedCmd);
+};
+
+class TopicCommand : public ICommand {
+    void execute(Server& server, const parsedCmd& _parsedCmd);
+};
+
+class ModeCommand : public ICommand {
     void execute(Server& server, const parsedCmd& _parsedCmd);
 };

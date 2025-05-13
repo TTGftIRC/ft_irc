@@ -22,7 +22,7 @@ int         _userLimit;
 bool        _inviteOnly;
 bool        _topicLocked;
 
-std::map<std::string, Client*> _clients;     // key = nickname    value = Client object
+std::vector<Client*> _clients;
 std::set<std::string> _operators;            // the operator's nickname
 std::set<std::string> _invited;              // list of invited nicknames
 public:
@@ -43,20 +43,20 @@ bool isTopicLocked() const;
 bool hasClient(const std::string& nickname) const;
 
 //Operators control
-// bool addOperator(const std::string& nickname);
-// void removeOperator(const std::string& nickname);
+bool addOperator(const std::string& nickname);
+bool removeOperator(const std::string& nickname);
 bool isOperator(const std::string& nickname) const;
 
 //Invite system
-// void invite(const std::string& nickname);
+void invite(const std::string& nickname);
 bool isInvited(const std::string& nickname) const;
 
 // Modes
-// void setPassword(const std::string& password);
-// void removePassword();
-// void setUserLimit(int limit);
-// void SetInviteOnly(bool on);
-// void SetTopicLock(bool on);
+void setPassword(const std::string& password);
+void removePassword();
+void setUserLimit(int limit);
+void SetInviteOnly(bool on);
+void SetTopicLock(bool on);
 
 //Messaging
 // void broadcast(const std::string& message, const std::string& senderNick);
