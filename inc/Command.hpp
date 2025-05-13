@@ -47,45 +47,45 @@ class ICommand {
 //I will do just a example command (incorrect behaviour anyways because we don't have parser yet)
 
 class PassCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd);
+    void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class NickCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd);
+    void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class UserCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd);
+    void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class JoinCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd);
+    void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class PartCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd);
+    void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class PrivmsgCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd);
+    void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class QuitCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd);
+    void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class KickCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd);
+    void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class InviteCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd);
+    void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class TopicCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd);
+    void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class ModeCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd);
+    void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };

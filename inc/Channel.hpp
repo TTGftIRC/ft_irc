@@ -18,8 +18,8 @@ private:
 std::string _name;
 std::string _topic;
 std::string _password;
-// int         _userLimit;
-// bool        _inviteOnly;
+int         _userLimit;
+bool        _inviteOnly;
 bool        _topicLocked;
 
 std::vector<Client*> _clients;

@@ -8,7 +8,7 @@ ICommand::~ICommand() {}
 //     (void) _parsedCmd;
 // }
 
-void NickCommand::execute(Server& server, const parsedCmd& _parsedCmd) {
+void NickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     _parsedCmd.srcClient->setNickname(_parsedCmd.args[1]);
     //and add more logic
     (void)server;
@@ -47,7 +47,7 @@ parsedCmd parseInput(const std::string& input, Client* client) {
 // result.srcClient = pointer to sender
 
 
-void PrivmsgCommand::execute(Server & server, const parsedCmd& _parsedCmd) {
+void PrivmsgCommand::execute(Server & server, const parsedCmd& _parsedCmd) const {
     if (_parsedCmd.args.size() < 2) {
         // _parsedCmd.srcClient->sendMessage("ERROR: PRIVMSG requires a target and a message");
         // return;      UNCOMMENT AFTER I HAVE A SENDMESSAGE FROM CLIENT
