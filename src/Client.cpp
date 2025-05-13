@@ -1,7 +1,7 @@
 #include "../inc/Client.hpp"
 
-Client::Client(int client_fd, const std::string& hostname) : _client_fd(client_fd), _hostname(hostname), _authorized(false) {
-    std::cout << "new client connection" << _client_fd << std::endl;
+Client::Client(int client_fd, const std::string& hostname) : _client_fd(client_fd), _hostname(hostname), _authorized(false), _ack_msg(false) {
+    std::cout << "new client connection " << _client_fd << std::endl;
 }
 
 int Client::getClientFd(void) {
@@ -44,6 +44,11 @@ void Client::setAuth(bool authorized) {
     _authorized = authorized;
 }
 
-Client::~Client() {
-
+void Client::AppendToBuffer(const std::string &to_append)
+{
+    _send_buffer += to_append;
 }
+
+
+
+Client::~Client(){}
