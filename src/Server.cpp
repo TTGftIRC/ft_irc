@@ -74,7 +74,6 @@ void Server::runPoll()
         {
             if (_poll_fds[0].fd == _listening_socket)
             {
-                // handle new client conexions
                 sockaddr_in client_addr;
                 socklen_t addr_len = sizeof(client_addr);
                 int new_socket = accept(_poll_fds[0].fd, reinterpret_cast<sockaddr *>(&client_addr), &addr_len);
@@ -100,6 +99,16 @@ void Server::runPoll()
                 std::cout << "Client has been disconnected !" << std::endl;
                 close(_poll_fds[i].fd);
                 _poll_fds.erase(_poll_fds.begin() + i);
+                _clients.erase(_poll_fds[i].fd);
+                --i;
+                continue;
+            }
+            if (_poll_fds[i].revents & (POLLERR | POLLNVAL))
+            {
+                std::cout << "Error: Client has been disconnected from the socket !" << std::endl;
+                close(_poll_fds[i].fd);
+                _poll_fds.erase(_poll_fds.begin() + i);
+                _clients.erase(_poll_fds[i].fd);
                 --i;
                 continue;
             }
@@ -127,6 +136,8 @@ void Server::runPoll()
                     std::cout << "Client has been disconnected !" << std::endl;
                     close(_poll_fds[i].fd);
                     _poll_fds.erase(_poll_fds.begin() + i);
+                    _clients.erase(_poll_fds[i].fd);
+
                     --i;
                 }
                 else

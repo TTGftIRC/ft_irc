@@ -17,17 +17,20 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include "Client.hpp"
+#include <csignal>
 
 class Client;
 
 class Server
 {
 private:
+    Server *_server_instance;
     int _listening_socket;
     std::vector<pollfd> _poll_fds;
     std::map<int, Client> _clients;
     void _makeNonBlock(int sock_fd);
 public:
+    void CloseServer(int signal);
     void startServer();
     void createSocket();
     void initAdress();
