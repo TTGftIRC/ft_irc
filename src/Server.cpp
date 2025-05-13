@@ -147,9 +147,7 @@ void Server::runPoll()
                         curr._ack_msg = true;
                     }
                     else if (bytes_to_send < 0)
-                    {
                         std::cerr << "Error: couldn't send msg" << std::endl;
-                    }
                 }
             }
         }
