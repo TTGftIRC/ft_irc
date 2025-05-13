@@ -59,14 +59,28 @@ void PrivmsgCommand::execute(Server & server, const parsedCmd& _parsedCmd) {
     (void) server; // just to be able to compile until i get my hands on a server.getChannel(target)(line 63) method TODO
 
     // If the target of the prvmsg is a channel
-    if (target[0] == '#') {
+    // if (target[0] == '#') {
         // Channel* channel = server.getChannel(target); I NEED THIS, MAYBE WILL IMPLEMENT LATER OR ONE OF YOU GUYS
-    }
+    // }
     // if (!channel) {
     //     _parsedCmd.srcClient->sendMessage("ERROR: No such channel");
     //     return; 
     // }
-    if (!channel->hasClient(senderNick)) {
-        
-    }
+    // if (!channel->hasClient(senderNick)) {
+    //     _parsedCmd.srcClient->sendMessage("ERROR: You are not on that channel");
+    //     return;
+    // }
+    // std::string fullMessage = ":" + senderNick + " PRIVMSG " + target + " :" + message;
+    // channel->broadcast(fullMessage, senderNick);
+
+    // Else assume the PRIVMSG is for another user
+    // else {
+        // Client* targetClient = server.getClientByNickname(target);
+        // if (!targetClient) {
+            // _parsedCmd.srcClient->sendMessage("ERROR: No such nickname");
+            // return;
+        // }
+        // std::string fullMessage = ":" + senderNick + " PRIVMSG " + target + " :" + message;
+        // targetClient->sendMessage(fullMessage);
+    // }
 }
