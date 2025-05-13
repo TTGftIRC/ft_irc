@@ -9,8 +9,9 @@ class Client
         std::string _username;
         std::string _realname;
         std::string _hostname;
+        std::string _send_buffer;
         bool _authorized;
-    public:
+        public:
         //getters
         int getClientFd(void);
         const std::string& getNickname(void);
@@ -18,13 +19,16 @@ class Client
         const std::string& getRealname(void);
         const std::string& getHostname(void);
         bool getAuth(void);
+        bool _ack_msg;
 
-        //setters
-        void setNickname(const std::string& nickname);
-        void setUsername(const std::string& username);
-        void setRealname(const std::string& realname);
-        void setAuth(bool authorized);
-
+    //setters
+    void setNickname(const std::string& nickname);
+    void setUsername(const std::string& username);
+    void setRealname(const std::string& realname);
+    void setAuth(bool authorized);
+    
         Client(int client_fd, const std::string& hostname);
+        Client() : _client_fd(-1) {}
         ~Client();
+        void AppendToBuffer(const std::string &to_append);
 };

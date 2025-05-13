@@ -26,7 +26,6 @@ private:
     int _listening_socket;
     std::vector<pollfd> _poll_fds;
     std::map<int, Client> _clients;
-private:
     void _makeNonBlock(int sock_fd);
 public:
     void startServer();
