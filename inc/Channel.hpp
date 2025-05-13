@@ -22,7 +22,7 @@ int         _userLimit;
 bool        _inviteOnly;
 bool        _topicLocked;
 
-std::map<std::string, Client*> _clients;     // key = nickname    value = Client object
+std::vector<Client*> _clients;
 std::set<std::string> _operators;            // the operator's nickname
 std::set<std::string> _invited;              // list of invited nicknames
 public:

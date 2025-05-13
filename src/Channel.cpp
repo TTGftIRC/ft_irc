@@ -8,9 +8,9 @@ Channel::Channel(const std::string& name) : _name(name) {
 Channel::~Channel() {
     std::cout << ORANGE << "Channel " << this->_name << " has been deleted!" << RESET << std::endl;
     
-    std::map<std::string, Client*>::iterator it;                    // don't know yet if i need this, worst chase scenario it's some useless extra lines of code
+    std::vector<Client*>::iterator it;                    // don't know yet if i need this, worst chase scenario it's some useless extra lines of code
     for (it = _clients.begin(); it != _clients.end(); ++it) {
-        delete it->second;
+        delete *it;
     }
     _clients.clear();
 }
@@ -39,10 +39,10 @@ bool Channel::isTopicLocked() const { return this->_topicLocked; }
 // bool Channel::addClient(Client* client, const std::string& key) {}
 // void Channel::removeClient(const std::string& nickname) {}
 bool Channel::hasClient(const std::string& nickname) const {
-    if (this->_clients.find(nickname) == _clients.end()) {
-        return false;
+    if (std::find(_clients.begin(), _clients.end(), nickname) != _clients.end()) {
+        return true;
     }
-    return true;
+    return false;
 }
 
 
