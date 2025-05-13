@@ -1,6 +1,6 @@
 NAME = ircserve
-CC = c++
-CFLAGZ = -Wall -Wextra -Werror -std=c++98 -Iinclude -g
+CXX = c++
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -Iinclude -g
 SRCS = main.cpp src/Client.cpp src/Server.cpp src/Command.cpp src/Channel.cpp
 OBJS = $(SRCS:.cpp=.o)
 
@@ -10,12 +10,12 @@ RED = \033[0;31m
 
 # Compilation rule
 %.o: %.cpp
-	@$(CC) $(CFLAGZ) -c $< -o $@
+	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	@$(CC) $(CFLAGZ) -o $(NAME) $(OBJS)
+	@$(CXX) $(CXXFLAGS) -o $(NAME) $(OBJS)
 	@echo "$(GREEN)✔ Successfully compiled $(NAME)$(RESET)"
 
 clean:

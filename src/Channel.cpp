@@ -39,8 +39,11 @@ bool Channel::isTopicLocked() const { return this->_topicLocked; }
 // bool Channel::addClient(Client* client, const std::string& key) {}
 // void Channel::removeClient(const std::string& nickname) {}
 bool Channel::hasClient(const std::string& nickname) const {
-    if (std::find(_clients.begin(), _clients.end(), nickname) != _clients.end()) {
-        return true;
+    std::vector<Client*>::const_iterator it;
+    for (it = _clients.begin(); it != _clients.end(); ++it) {
+        if ((*it)->getNickname() == nickname) {
+            return true;
+        }
     }
     return false;
 }
