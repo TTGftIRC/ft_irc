@@ -59,8 +59,39 @@ bool Channel::addClient(Client* client, const std::string& password) {
         return false;
     }
     //check if channel has password and if the provided password is correct
+    if (!this->_password.empty() && password != this->_password) {
+        client->sendMessage("476 " + client->getNickname() + " " + _name + " :Incorect password.");
+        return false;
+    }
+    //add the client to the channel
+    _clients.push_back(client);
+    client->sendMessage("JOIN " + _name + " :Welcome to the channel.");
+    //broadcast to the other members that a new client joined
+    std::string joinMsg = ":" + client->getNickname() + "!" + client->getUsername() + "@" + client->getHostname() + " JOIN " + _name;
+    broadcast(joinMsg, client->getNickname()); // the broadcast will not reach the client who just joined
+    //send topic to new client
+    client->sendMessage("332 " + client->getNickname() + " " + _name + " :" + _topic);
+    return true;
 }
-// void Channel::removeClient(const std::string& nickname) {}
+
+void Channel::removeClient(const std::string& nickname) {
+    std::vector<Client*>::iterator it;
+    for (it = _clients.begin(); it != _clients.end(); ++it) {
+        if ((*it)->getNickname() == nickname) {
+            _clients.erase(it); // removes the pointer from vector, but not the object itself(client)
+            break;
+        }
+    }
+    _operators.erase(nickname);
+    _invited.erase(nickname);
+    
+    //broadcast parting
+    std::string partMsg = ":" + nickname + " PART " + _name;
+    broadcast(partMsg, nickname);
+    //msg to server
+    std::cout << ORANGE << "Client " << nickname << " removed from channel " << _name << RESET << std::endl;
+}
+
 bool Channel::hasClient(const std::string& nickname) const {
     std::vector<Client*>::const_iterator it;
     for (it = _clients.begin(); it != _clients.end(); ++it) {

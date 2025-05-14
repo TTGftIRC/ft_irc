@@ -41,7 +41,7 @@ bool isTopicLocked() const;
 
 //Client control
 bool addClient(Client* client, const std::string& password);
-// void removeClient(const std::string& nickname);
+void removeClient(const std::string& nickname);
 bool hasClient(const std::string& nickname) const;
 
 //Operators control
