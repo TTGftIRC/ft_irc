@@ -12,9 +12,11 @@
 # define RESET "\033[0m"
 
 class Client;
+class Server;
 
 class Channel {
 private:
+Server _server;
 std::string _name;
 std::string _topic;
 std::string _password;
@@ -34,11 +36,11 @@ const std::string& getName() const;
 const std::string& getTopic() const;
 
 //Topic control
-// void setTopic(const std::string& topic, const std::string& setter);
+void setTopic(const std::string& topic, const std::string& setter);
 bool isTopicLocked() const;
 
 //Client control
-// bool addClient(Client* client, const std::string& key);
+bool addClient(Client* client, const std::string& password);
 // void removeClient(const std::string& nickname);
 bool hasClient(const std::string& nickname) const;
 
@@ -59,7 +61,7 @@ void SetInviteOnly(bool on);
 void SetTopicLock(bool on);
 
 //Messaging
-// void broadcast(const std::string& message, const std::string& senderNick);
+void broadcast(const std::string& message, const std::string& senderNick);
 
 //Helpers
 size_t getClientCount() const;

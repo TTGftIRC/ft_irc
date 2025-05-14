@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <set>
+#include <cstring>
 #include "Client.hpp"
 
 class Client;
@@ -35,6 +36,7 @@ public:
     void startListen();
     void runPoll();
     void handleNewConect();
+    Client* getClientByNickname(const std::string& nickname);
     Server();
     ~Server();
 };

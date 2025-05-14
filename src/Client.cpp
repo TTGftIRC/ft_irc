@@ -1,4 +1,6 @@
 #include "../inc/Client.hpp"
+#include "../inc/Channel.hpp"
+#include "../inc/Server.hpp"
 
 Client::Client(int client_fd, const std::string& hostname) : _client_fd(client_fd), _hostname(hostname), _authorized(false), _ack_msg(false) {
     std::cout << "new client connection " << _client_fd << std::endl;
@@ -49,6 +51,14 @@ void Client::AppendToBuffer(const std::string &to_append)
     _send_buffer += to_append;
 }
 
+void Client::sendMessage(const std::string& message) const {
+    std::string formattedMsg = message + "\r\n";  //IRC-style
+    ssize_t sent = send(_client_fd, formattedMsg.c_str(), formattedMsg.length(), 0);
 
+    if (sent == -1) {
+        std::cerr << ORANGE << "Error sending message to client (fd " << _client_fd << "): " 
+                << strerror(errno) << RESET << std::endl;
+    }
+}
 
 Client::~Client(){}

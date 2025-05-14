@@ -21,22 +21,45 @@ const std::string& Channel::getName() const { return this->_name; }
 const std::string& Channel::getTopic() const { return this->_topic; }
 
 
-// void Channel::setTopic(const std::string& topic, const std::string& setter) {
-//     if (_topicLocked && _operators.find(setter) == _operators.end()) {
-//         Client* client = Server::getClientByNickname(setter); //TODO from client's side a getter by name
-//         if (client) {
-//             client->sendMessage()
-//         }
-//         return;
-//     }
-//     this->_topic = topic;
-//     std::cout << BLUE << "Topic has been set!" << RESET << std::endl;
-// }
+void Channel::setTopic(const std::string& topic, const std::string& setter) {
+    Client* client = _server.getClientByNickname(setter);
+    if (!client)   // check if the client is in the server map
+        return;
+    if (_topicLocked && !isOperator(setter)) {  // check if the topic is locked and if the setter is an operator or not
+            client->sendMessage("482 " + setter + " " + " : You're not channel operator");
+            return;
+        }
+    this->_topic = topic;
+    std::string topicMsg = ":" + setter + " TOPIC " + _name + " :" + topic;
+    broadcast(topicMsg); //without the second param, even the setter will be notified with this message
+    
+    //optional for server console
+    std::cout << GREEN << "Topic for channel " << _name << " changed to: " << topic << RESET << std::endl;
+
+
+}
 
 bool Channel::isTopicLocked() const { return this->_topicLocked; }
 
 
-// bool Channel::addClient(Client* client, const std::string& key) {}
+bool Channel::addClient(Client* client, const std::string& password) {
+    //check if client already in channel
+    if (hasClient(client->getNickname())) {
+        client->sendMessage("NOTICE " + client->getNickname() + " :You are already in this channel.");
+        return false;
+    }
+    //check if the channel is invite only and if the client is invited
+    if (this->_inviteOnly && !isInvited(client->getNickname())) {
+        client->sendMessage("473 " + client->getNickname() + " " + _name + " :Channel is invite-only.");
+        return false;
+    }
+    //check if there is a user limit and if the limit has been reached
+    if (_userLimit > 0 && getClientCount() >= _userLimit) {
+        client->sendMessage("471 " + client->getNickname() + " " + _name + " :Channel is full.");
+        return false;
+    }
+    //check if channel has password and if the provided password is correct
+}
 // void Channel::removeClient(const std::string& nickname) {}
 bool Channel::hasClient(const std::string& nickname) const {
     std::vector<Client*>::const_iterator it;
@@ -85,8 +108,16 @@ void Channel::SetInviteOnly(bool on) { _inviteOnly = on; }
 
 void Channel::SetTopicLock(bool on) { _topicLocked = on; }
 
-//Messaging
-// void Channel::broadcast(const std::string& message, const std::string& senderNick) {}
+
+void Channel::broadcast(const std::string& message, const std::string& senderNick = "") {
+    for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        if (*it && (*it)->getNickname() != senderNick) {  // so we dont send to the user that is broadcasting the message (irc behavior)
+            (*it)->sendMessage(message);
+        }
+    }
+    // !!! the ="" means the parameter is optional , which works great in this case(see setTopic)
+    //the feature is called default parameter and it is available in C++98
+}
 
 //Helpers
 size_t Channel::getClientCount() const { return _clients.size(); }
