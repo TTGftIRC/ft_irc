@@ -24,11 +24,15 @@ class Client;
 class Server
 {
 private:
+    int _port;
+    std::string _pass;
     int _listening_socket;
     std::vector<pollfd> _poll_fds;
-    std::map<int, Client> _clients;
+    std::map<int, Client*> _clients;
     void _makeNonBlock(int sock_fd);
 public:
+    void setPort(int port);
+    void setPass(const std::string& pass);
     void startServer();
     void createSocket();
     void initAdress();

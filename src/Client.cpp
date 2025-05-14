@@ -44,9 +44,18 @@ void Client::setAuth(bool authorized) {
     _authorized = authorized;
 }
 
-void Client::AppendToBuffer(const std::string &to_append)
-{
+void Client::AppendToBuffer(const std::string &to_append) {
     _send_buffer += to_append;
+}
+
+void Client::sendMessage(const std::string& message, int sock_target) const {
+    std::string formattedMsg = message + "\r\n";
+    ssize_t sent = send(sock_target, formattedMsg.c_str(), formattedMsg.length(), 0);
+
+    if (sent == -1) {
+        std::cerr << "Error sending message to client (fd " << _client_fd << "): " 
+                << strerror(errno) << std::endl;
+    }
 }
 
 

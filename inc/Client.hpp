@@ -1,8 +1,7 @@
 #pragma once
 #include "Server.hpp"
 
-class Client
-{
+class Client {
     private:
         int _client_fd;
         std::string _nickname;
@@ -11,7 +10,7 @@ class Client
         std::string _hostname;
         std::string _send_buffer;
         bool _authorized;
-        public:
+    public:
         //getters
         int getClientFd(void);
         const std::string& getNickname(void);
@@ -19,14 +18,17 @@ class Client
         const std::string& getRealname(void);
         const std::string& getHostname(void);
         bool getAuth(void);
+
+        //setters
+        void setNickname(const std::string& nickname);
+        void setUsername(const std::string& username);
+        void setRealname(const std::string& realname);
+        void setAuth(bool authorized);
+
         bool _ack_msg;
 
-    //setters
-    void setNickname(const std::string& nickname);
-    void setUsername(const std::string& username);
-    void setRealname(const std::string& realname);
-    void setAuth(bool authorized);
-    
+        void sendMessage(const std::string& message, int sock_target) const;
+
         Client(int client_fd, const std::string& hostname);
         Client() : _client_fd(-1) {}
         ~Client();
