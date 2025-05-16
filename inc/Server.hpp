@@ -39,6 +39,7 @@ public:
     void startListen();
     void runPoll();
     void handleNewConect();
+    Client* getClientByNick(const std::string& nickname);
     Server();
     ~Server();
 };

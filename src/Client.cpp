@@ -1,6 +1,6 @@
 #include "../inc/Client.hpp"
 
-Client::Client(int client_fd, const std::string& hostname) : _client_fd(client_fd), _hostname(hostname), _authorized(false), _ack_msg(false) {
+Client::Client(int client_fd, const std::string& hostname, Server* server) : _serv_ref(server), _client_fd(client_fd), _hostname(hostname), _authorized(false), _ack_msg(false) {
     std::cout << "new client connection " << _client_fd << std::endl;
 }
 
@@ -47,17 +47,5 @@ void Client::setAuth(bool authorized) {
 void Client::AppendToBuffer(const std::string &to_append) {
     _send_buffer += to_append;
 }
-
-void Client::sendMessage(const std::string& message, int sock_target) const {
-    std::string formattedMsg = message + "\r\n";
-    ssize_t sent = send(sock_target, formattedMsg.c_str(), formattedMsg.length(), 0);
-
-    if (sent == -1) {
-        std::cerr << "Error sending message to client (fd " << _client_fd << "): " 
-                << strerror(errno) << std::endl;
-    }
-}
-
-
 
 Client::~Client(){}

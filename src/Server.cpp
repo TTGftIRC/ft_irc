@@ -19,6 +19,15 @@ void Server::setPass(const std::string& pass) {
 
 Server::Server() {}
 
+Client* Server::getClientByNick(const std::string& nickname) {
+    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        if (it->second->getNickname() == nickname) {
+            return it->second;
+        }
+    }
+    return NULL;
+}
+
 void Server::createSocket()
 {
     _listening_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -93,7 +102,7 @@ void Server::runPoll()
                 }
                 _makeNonBlock(new_socket);
                 std::string client_ip = inet_ntoa(client_addr.sin_addr);
-                Client* new_client = new Client(new_socket, client_ip);
+                Client* new_client = new Client(new_socket, client_ip, this);
                 _clients.insert(std::make_pair(new_socket, new_client));
                 pollfd new_conexion;
                 new_conexion.fd = new_socket;
@@ -148,7 +157,7 @@ void Server::runPoll()
             {
                 if (!curr->_ack_msg)
                 {
-                    std::string welcomemsg = "Welcome to the server\n\r";
+                    std::string welcomemsg = "Welcome to the server\r\n";
                     int bytes_to_send = send(_poll_fds[i].fd, welcomemsg.c_str(), strlen(welcomemsg.c_str()), 0);
                     if (bytes_to_send > 0)
                     {
