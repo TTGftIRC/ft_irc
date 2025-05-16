@@ -40,6 +40,7 @@ public:
     void runPoll();
     void handleNewConect();
     Client* getClientByNick(const std::string& nickname);
+    void requestPollOut(int client_fd, bool enable);
     Server();
     ~Server();
 };

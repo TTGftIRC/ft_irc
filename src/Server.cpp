@@ -28,6 +28,22 @@ Client* Server::getClientByNick(const std::string& nickname) {
     return NULL;
 }
 
+//This is callback for the client side to activate event for POLLOUT
+// You can activate and deactivate event
+
+void Server::requestPollOut(int client_fd, bool enable) {
+    for (std::vector<pollfd>::iterator it = _poll_fds.begin(); it != _poll_fds.end(); ++it) {
+        if (it->fd == client_fd) {
+            if (enable) { 
+                it->events |= POLLOUT;
+            } else {
+                it->events &= ~POLLOUT;
+            }
+            break;
+        }
+    }
+}
+
 void Server::createSocket()
 {
     _listening_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -136,7 +152,7 @@ void Server::runPoll()
                         int target_fd = _poll_fds[j].fd;
                         if (target_fd != _poll_fds[i].fd)
                         {
-                            _clients[target_fd]->AppendToBuffer(buff_copy);
+                            _clients[target_fd]->appendRecvData(buff_copy);
                             _poll_fds[j].events |= POLLOUT;
                         }
                     }

@@ -16,13 +16,13 @@ class Client {
         bool _authorized;
     public:
         //getters
-        int getClientFd(void);
-        const std::string& getNickname(void);
-        const std::string& getUsername(void);
-        const std::string& getRealname(void);
-        const std::string& getHostname(void);
-        const std::string& getSendBuf(void);
-        bool getAuth(void);
+        int getClientFd(void) const;
+        const std::string& getNickname(void) const;
+        const std::string& getUsername(void) const;
+        const std::string& getRealname(void) const;
+        const std::string& getHostname(void) const;
+        const std::string& getSendBuf(void) const;
+        bool getAuth(void) const;
 
         //setters
         void setNickname(const std::string& nickname);
@@ -35,6 +35,11 @@ class Client {
 
         Client(int client_fd, const std::string& hostname, Server* server);
         ~Client();
-        void AppendToBuffer(const std::string &to_append);
+        //recv functions
+        void appendRecvData(const std::string& buf);
+        std::string extractLineFromRecv();
+        //send functions
         bool hasData() const;
+        void queueMessage(const std::string& msg);
+        void helpSenderEvent(size_t len);
 };
