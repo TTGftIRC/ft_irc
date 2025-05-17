@@ -95,6 +95,7 @@ void Server::runPoll()
     pollfd server_fd;
     server_fd.fd = _listening_socket;
     server_fd.events = POLLIN;
+    server_fd.revents = 0;
     _poll_fds.push_back(server_fd); // first elem of the pollfd will be the server which will be waiting for new events
     while (true)
     {
@@ -123,6 +124,7 @@ void Server::runPoll()
                 pollfd new_conexion;
                 new_conexion.fd = new_socket;
                 new_conexion.events = POLLIN | POLLOUT;
+                new_conexion.revents = 0;
                 _poll_fds.push_back(new_conexion);
             }
         }
@@ -152,8 +154,10 @@ void Server::runPoll()
                         int target_fd = _poll_fds[j].fd;
                         if (target_fd != _poll_fds[i].fd)
                         {
-                            _clients[target_fd]->appendRecvData(buff_copy);
-                            _poll_fds[j].events |= POLLOUT;
+                            if (_clients.find(target_fd) != _clients.end()) {
+                                _clients[target_fd]->appendRecvData(buff_copy);
+                                _poll_fds[j].events |= POLLOUT;
+                            }
                         }
                     }
                 }
