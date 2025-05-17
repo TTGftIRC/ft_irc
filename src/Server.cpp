@@ -9,7 +9,40 @@ void Server::_makeNonBlock(int sock_fd)
     }
 }
 
+void Server::setPort(int port) {
+    _port = port;
+}
+
+void Server::setPass(const std::string& pass) {
+    _pass = pass;
+}
+
 Server::Server() {}
+
+Client* Server::getClientByNick(const std::string& nickname) {
+    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        if (it->second->getNickname() == nickname) {
+            return it->second;
+        }
+    }
+    return NULL;
+}
+
+//This is callback for the client side to activate event for POLLOUT
+// You can activate and deactivate event
+
+void Server::requestPollOut(int client_fd, bool enable) {
+    for (std::vector<pollfd>::iterator it = _poll_fds.begin(); it != _poll_fds.end(); ++it) {
+        if (it->fd == client_fd) {
+            if (enable) { 
+                it->events |= POLLOUT;
+            } else {
+                it->events &= ~POLLOUT;
+            }
+            break;
+        }
+    }
+}
 
 void Server::createSocket()
 {
@@ -33,7 +66,7 @@ void Server::initAdress()
     sockaddr_in serverAdress = {};
 
     serverAdress.sin_family = AF_INET;
-    serverAdress.sin_port = htons(8080);
+    serverAdress.sin_port = htons(_port);
     serverAdress.sin_addr.s_addr = INADDR_ANY; // setup serv adress
 
     // bind port w server
@@ -52,7 +85,7 @@ void Server::startListen()
         exit(EXIT_FAILURE);
     }
     // replc port 8080 w all ports
-    std::cout << "Server is now listening on port 8080...." << std::endl;
+    std::cout << "Server is now listening on port " << _port << "...." << std::endl;
 }
 
 // void 
@@ -85,7 +118,8 @@ void Server::runPoll()
                 }
                 _makeNonBlock(new_socket);
                 std::string client_ip = inet_ntoa(client_addr.sin_addr);
-                _clients.insert(std::make_pair(new_socket, Client(new_socket, client_ip)));
+                Client* new_client = new Client(new_socket, client_ip, this);
+                _clients.insert(std::make_pair(new_socket, new_client));
                 pollfd new_conexion;
                 new_conexion.fd = new_socket;
                 new_conexion.events = POLLIN | POLLOUT;
@@ -94,11 +128,12 @@ void Server::runPoll()
         }
         for (size_t i = 1; i < _poll_fds.size(); i++)
         {
-            Client &curr = _clients[_poll_fds[i].fd];
+            Client* curr = _clients[_poll_fds[i].fd];
             if (_poll_fds[i].revents & POLLHUP)
             {
                 std::cout << "Client has been disconnected !" << std::endl;
                 close(_poll_fds[i].fd);
+                delete _clients[_poll_fds[i].fd];
                 _poll_fds.erase(_poll_fds.begin() + i);
                 --i;
                 continue;
@@ -117,7 +152,7 @@ void Server::runPoll()
                         int target_fd = _poll_fds[j].fd;
                         if (target_fd != _poll_fds[i].fd)
                         {
-                            _clients[target_fd].AppendToBuffer(buff_copy);
+                            _clients[target_fd]->appendRecvData(buff_copy);
                             _poll_fds[j].events |= POLLOUT;
                         }
                     }
@@ -136,15 +171,15 @@ void Server::runPoll()
             }
             if (_poll_fds[i].revents & POLLOUT)
             {
-                if (!curr._ack_msg)
+                if (!curr->_ack_msg)
                 {
-                    std::string welcomemsg = "Welcome to the server\n";
+                    std::string welcomemsg = "Welcome to the server\r\n";
                     int bytes_to_send = send(_poll_fds[i].fd, welcomemsg.c_str(), strlen(welcomemsg.c_str()), 0);
                     if (bytes_to_send > 0)
                     {
-                        std::cout << bytes_to_send << "\n";
+                        // std::cout << bytes_to_send;
                         _poll_fds[i].events &= ~POLLOUT;
-                        curr._ack_msg = true;
+                        curr->_ack_msg = true;
                     }
                     else if (bytes_to_send < 0)
                         std::cerr << "Error: couldn't send msg" << std::endl;

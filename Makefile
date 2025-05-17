@@ -20,10 +20,10 @@ $(NAME): $(OBJS)
 
 clean:
 	@rm -f $(OBJS)
-	@echo "$(RED)✔ Successfully cleaned object files$(RED)"
+	@echo "$(RED)✔ Successfully cleaned object files$(RED)$(RESET)"
 
 fclean: clean
 	@rm -f $(NAME)
-	@echo "$(RED)✔ Successfully cleaned executable $(RED)"
+	@echo "$(RED)✔ Successfully cleaned executable $(RED)$(RESET)"
 
 re: fclean all
