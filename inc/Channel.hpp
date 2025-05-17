@@ -17,7 +17,7 @@ class Server;
 class Channel
 {
 private:
-    Server _server;
+    Server* _server;
     std::string _name;
     std::string _topic;
     std::string _password;

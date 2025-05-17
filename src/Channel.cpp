@@ -22,11 +22,11 @@ const std::string& Channel::getTopic() const { return this->_topic; }
 
 
 void Channel::setTopic(const std::string& topic, const std::string& setter) {
-    Client* client = _server.getClientByNickname(setter);
+    Client* client = _server->getClientByNick(setter);
     if (!client)   // check if the client is in the server map
         return;
     if (_topicLocked && !isOperator(setter)) {  // check if the topic is locked and if the setter is an operator or not
-            client->sendMessage("482 " + setter + " " + " : You're not channel operator");
+            client->queueMessage("482 " + setter + " " + " : You're not channel operator");
             return;
         }
     this->_topic = topic;
@@ -45,32 +45,32 @@ bool Channel::isTopicLocked() const { return this->_topicLocked; }
 bool Channel::addClient(Client* client, const std::string& password) {
     //check if client already in channel
     if (hasClient(client->getNickname())) {
-        client->sendMessage("NOTICE " + client->getNickname() + " :You are already in this channel.");
+        client->queueMessage("NOTICE " + client->getNickname() + " :You are already in this channel.");
         return false;
     }
     //check if the channel is invite only and if the client is invited
     if (this->_inviteOnly && !isInvited(client->getNickname())) {
-        client->sendMessage("473 " + client->getNickname() + " " + _name + " :Channel is invite-only.");
+        client->queueMessage("473 " + client->getNickname() + " " + _name + " :Channel is invite-only.");
         return false;
     }
     //check if there is a user limit and if the limit has been reached
     if (_userLimit > 0 && getClientCount() >= _userLimit) {
-        client->sendMessage("471 " + client->getNickname() + " " + _name + " :Channel is full.");
+        client->queueMessage("471 " + client->getNickname() + " " + _name + " :Channel is full.");
         return false;
     }
     //check if channel has password and if the provided password is correct
     if (!this->_password.empty() && password != this->_password) {
-        client->sendMessage("476 " + client->getNickname() + " " + _name + " :Incorect password.");
+        client->queueMessage("476 " + client->getNickname() + " " + _name + " :Incorect password.");
         return false;
     }
     //add the client to the channel
     _clients.push_back(client);
-    client->sendMessage("JOIN " + _name + " :Welcome to the channel.");
+    client->queueMessage("JOIN " + _name + " :Welcome to the channel.");
     //broadcast to the other members that a new client joined
     std::string joinMsg = ":" + client->getNickname() + "!" + client->getUsername() + "@" + client->getHostname() + " JOIN " + _name;
     broadcast(joinMsg, client->getNickname()); // the broadcast will not reach the client who just joined
     //send topic to new client
-    client->sendMessage("332 " + client->getNickname() + " " + _name + " :" + _topic);
+    client->queueMessage("332 " + client->getNickname() + " " + _name + " :" + _topic);
     return true;
 }
 
@@ -143,7 +143,7 @@ void Channel::SetTopicLock(bool on) { _topicLocked = on; }
 void Channel::broadcast(const std::string& message, const std::string& senderNick) {
     for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (*it && (*it)->getNickname() != senderNick) {  // so we dont send to the user that is broadcasting the message (irc behavior)
-            (*it)->sendMessage(message);
+            (*it)->queueMessage(message);
         }
     }
 }
