@@ -27,22 +27,27 @@ class Channel;
 class Server
 {
 private:
+    int _port;
+    std::string _pass;
     int _listening_socket;
     std::vector<pollfd> _poll_fds;
-    std::map<int, Client> _clients;
+    std::map<int, Client*> _clients;
     std::set<Channel*> _channels;
     void _makeNonBlock(int sock_fd);
 public:
+    void setPort(int port);
+    void setPass(const std::string& pass);
     void startServer();
     void createSocket();
     void initAdress();
     void startListen();
     void runPoll();
     void handleNewConect();
-    Client* getClientByNickname(const std::string& nickname);
     Channel* getChannel(const std::string& name);
     bool addChannel(const std::string& channel);
 
+    Client* getClientByNick(const std::string& nickname);
+    void requestPollOut(int client_fd, bool enable);
     Server();
     ~Server();
 };
