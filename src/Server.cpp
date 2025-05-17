@@ -174,3 +174,24 @@ Client* Server::getClientByNickname(const std::string& nickname) {
     return NULL;
 }
 
+Channel* Server::getChannel(const std::string& name) {
+    for (std::set<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        if ((*it)->getName() == name) {
+            return *it;
+        }
+    }
+    return NULL;
+}
+
+bool Server::addChannel(const std::string& name) {
+    for(std::set<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        if ((*it)->getName() == name) {
+            std::cout << ORANGE << "Channel already exits" << RESET << std::endl;
+            return false;
+        }
+    }
+    Channel* newChannel = new Channel(name);
+    _channels.insert(newChannel);
+    std::cout << GREEN << "Channel " << name << " created succesfully" << RESET << std::endl;
+    return true;
+}

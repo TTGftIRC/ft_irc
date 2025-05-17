@@ -2,7 +2,7 @@
 
 
 Channel::Channel(const std::string& name) : _name(name) {
-    std::cout << PURPLE << "Channel " << this->_name << " has been created!" << RESET << std::endl;
+    // std::cout << PURPLE << "Channel " << this->_name << " has been created!" << RESET << std::endl;
 }
 
 Channel::~Channel() {
@@ -82,7 +82,7 @@ void Channel::removeClient(const std::string& nickname) {
             break;
         }
     }
-    _operators.erase(nickname);
+    _operators.erase(nickname);   // for both sets, if nickname is not there 
     _invited.erase(nickname);
     
     //broadcast parting
@@ -140,14 +140,12 @@ void Channel::SetInviteOnly(bool on) { _inviteOnly = on; }
 void Channel::SetTopicLock(bool on) { _topicLocked = on; }
 
 
-void Channel::broadcast(const std::string& message, const std::string& senderNick = "") {
+void Channel::broadcast(const std::string& message, const std::string& senderNick) {
     for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (*it && (*it)->getNickname() != senderNick) {  // so we dont send to the user that is broadcasting the message (irc behavior)
             (*it)->sendMessage(message);
         }
     }
-    // !!! the ="" means the parameter is optional , which works great in this case(see setTopic)
-    //the feature is called default parameter and it is available in C++98
 }
 
 //Helpers

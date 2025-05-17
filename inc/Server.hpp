@@ -19,8 +19,10 @@
 #include <set>
 #include <cstring>
 #include "Client.hpp"
+#include "Channel.hpp"
 
 class Client;
+class Channel;
 
 class Server
 {
@@ -28,6 +30,7 @@ private:
     int _listening_socket;
     std::vector<pollfd> _poll_fds;
     std::map<int, Client> _clients;
+    std::set<Channel*> _channels;
     void _makeNonBlock(int sock_fd);
 public:
     void startServer();
@@ -37,6 +40,9 @@ public:
     void runPoll();
     void handleNewConect();
     Client* getClientByNickname(const std::string& nickname);
+    Channel* getChannel(const std::string& name);
+    bool addChannel(const std::string& channel);
+
     Server();
     ~Server();
 };
