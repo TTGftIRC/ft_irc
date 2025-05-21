@@ -26,6 +26,10 @@ const std::string& Client::getHostname(void) const {
     return _hostname;
 }
 
+const std::string& Client::getSendBuf(void) const {
+    return _send_buffer;
+}
+
 bool Client::getAuth(void) const {
     return _authorized;
 }
@@ -61,10 +65,11 @@ void Client::appendRecvData(const std::string& buf) {
 // }
 
 std::string Client::extractLineFromRecv() {
-    size_t end = _recv_buffer.find("\r\n");
+    size_t end = _recv_buffer.find("\n");
     if (end != std::string::npos) {
         std::string res = _recv_buffer.substr(0, end);
-        _recv_buffer.erase(0, end + 2);
+        _recv_buffer.erase(0, end + 1);
+        std::cout << "Extracted line: [" << res << "]" << std::endl;
         return res;
     }
     return "";

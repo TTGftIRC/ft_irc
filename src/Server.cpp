@@ -88,26 +88,28 @@ void Server::startListen()
     std::cout << "Server is now listening on port " << _port << "...." << std::endl;
 }
 
-// void 
+Client* Server::findSecondClient(int sock_src) {
+    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        if (it->second->getClientFd() != sock_src && it->second->getClientFd() != _listening_socket) {
+            return it->second;
+        }
+    }
+    return NULL;
+}
 
-void Server::runPoll()
-{
+void Server::runPoll() {
     pollfd server_fd;
     server_fd.fd = _listening_socket;
     server_fd.events = POLLIN;
     server_fd.revents = 0;
     _poll_fds.push_back(server_fd); // first elem of the pollfd will be the server which will be waiting for new events
-    while (true)
-    {
-        if (poll(_poll_fds.data(), _poll_fds.size(), -1) == -1)
-        {
+    while (true) {
+        if (poll(_poll_fds.data(), _poll_fds.size(), -1) == -1) {
             std::cerr << "Error: poll has failed" << std::endl;
             exit(EXIT_FAILURE);
         }
-        if (_poll_fds[0].revents & POLLIN)
-        {
-            if (_poll_fds[0].fd == _listening_socket)
-            {
+        if (_poll_fds[0].revents & POLLIN) {
+            if (_poll_fds[0].fd == _listening_socket) {
                 // handle new client conexions
                 sockaddr_in client_addr;
                 socklen_t addr_len = sizeof(client_addr);
@@ -123,16 +125,15 @@ void Server::runPoll()
                 _clients.insert(std::make_pair(new_socket, new_client));
                 pollfd new_conexion;
                 new_conexion.fd = new_socket;
-                new_conexion.events = POLLIN | POLLOUT;
+                new_conexion.events = POLLIN;
+                //delete pollout because I am sending callback for this event and it can lead to infinite search for pollout
                 new_conexion.revents = 0;
                 _poll_fds.push_back(new_conexion);
             }
         }
-        for (size_t i = 1; i < _poll_fds.size(); i++)
-        {
+        for (size_t i = 1; i < _poll_fds.size(); i++) {
             Client* curr = _clients[_poll_fds[i].fd];
-            if (_poll_fds[i].revents & POLLHUP)
-            {
+            if (_poll_fds[i].revents & POLLHUP) {
                 std::cout << "Client has been disconnected !" << std::endl;
                 close(_poll_fds[i].fd);
                 delete _clients[_poll_fds[i].fd];
@@ -140,54 +141,46 @@ void Server::runPoll()
                 _poll_fds.erase(_poll_fds.begin() + i);
                 --i;
                 continue;
-            }
-            if (_poll_fds[i].revents & POLLIN)
-            {
-                // handle client/sock data
+            } if (_poll_fds[i].revents & POLLIN) {
                 char buffer[1024] = {0};
                 size_t bytes_read = recv(_poll_fds[i].fd, buffer, sizeof(buffer), 0);
-                if (bytes_read > 0)
-                {
-                    std::string buff_copy(buffer, bytes_read);
-                    std::cout << buffer << "\n";
-                    for (size_t j = 0; j < _poll_fds.size(); j++)
-                    {
-                        int target_fd = _poll_fds[j].fd;
-                        if (target_fd != _poll_fds[i].fd)
-                        {
-                            if (_clients.find(target_fd) != _clients.end()) {
-                                _clients[target_fd]->appendRecvData(buff_copy);
-                                _poll_fds[j].events |= POLLOUT;
-                            }
+                std::cout << "recv() returned: " << bytes_read << " bytes from FD " << _poll_fds[i].fd << std::endl;
+                std::cout << "Buffer content: [" << buffer << "]" << std::endl;
+                if (bytes_read > 0) {
+                    curr->appendRecvData(buffer);
+                    std::string cmd;
+                    while (!(cmd = curr->extractLineFromRecv()).empty()) {
+                        //IMPORTANT
+                        //here is parsing and queing message
+                        //I will do msg to the diferent client for testing
+                        Client* target = findSecondClient(curr->getClientFd());
+                        std::cout << "I am here" << std::endl;
+                        if (target) {
+                            std::cout << "Found second client " << target->getClientFd() << std::endl;
+                            target->queueMessage(cmd + "\r\n");
                         }
                     }
-                }
-                else if (bytes_read == 0)
-                {
+                } else if (bytes_read == 0) {
                     std::cout << "Client has been disconnected !" << std::endl;
                     close(_poll_fds[i].fd);
+                    delete _clients[_poll_fds[i].fd];
+                    _clients.erase(_poll_fds[i].fd);
                     _poll_fds.erase(_poll_fds.begin() + i);
                     --i;
-                }
-                else
-                {
+                } else {
                     std::cerr << "Error: receiving data" << std::endl;
                 }
-            }
-            if (_poll_fds[i].revents & POLLOUT)
-            {
-                if (!curr->_ack_msg)
-                {
-                    std::string welcomemsg = "Welcome to the server\r\n";
-                    int bytes_to_send = send(_poll_fds[i].fd, welcomemsg.c_str(), strlen(welcomemsg.c_str()), 0);
-                    if (bytes_to_send > 0)
-                    {
-                        // std::cout << bytes_to_send;
-                        _poll_fds[i].events &= ~POLLOUT;
-                        curr->_ack_msg = true;
-                    }
-                    else if (bytes_to_send < 0)
+            } if (_poll_fds[i].revents & POLLOUT) {
+                if (curr->hasData()) {
+                    const std::string& data_to_send = curr->getSendBuf();
+                    ssize_t bytes = send(_poll_fds[i].fd, data_to_send.data(), data_to_send.length(), 0);
+                    if (bytes > 0) {
+                        curr->helpSenderEvent(bytes);
+                    } else if (bytes == 0) {
+                        std::cout << "Sent 0 bytes for some reason" << std::endl;
+                    } else if (bytes < 0) {
                         std::cerr << "Error: couldn't send msg" << std::endl;
+                    }
                 }
             }
         }

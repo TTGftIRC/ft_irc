@@ -47,6 +47,7 @@ public:
     bool addChannel(const std::string& channel);
 
     Client* getClientByNick(const std::string& nickname);
+    Client* findSecondClient(int sock_src);
     void requestPollOut(int client_fd, bool enable);
     Server();
     ~Server();
