@@ -136,6 +136,7 @@ void Server::runPoll()
                 std::cout << "Client has been disconnected !" << std::endl;
                 close(_poll_fds[i].fd);
                 delete _clients[_poll_fds[i].fd];
+                _clients.erase(_poll_fds[i].fd);
                 _poll_fds.erase(_poll_fds.begin() + i);
                 --i;
                 continue;
@@ -201,7 +202,12 @@ void Server::startServer()
     runPoll();
 }
 
-Server::~Server() {}
+Server::~Server() {
+    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        delete it->second;
+    }
+    _clients.clear();
+}
 
 
 Channel* Server::getChannel(const std::string& name) {
