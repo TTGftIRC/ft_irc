@@ -51,7 +51,7 @@ void Client::setAuth(bool authorized) {
 }
 
 void Client::appendRecvData(const std::string& buf) {
-    _recv_buffer.append(buf, buf.length());
+    _recv_buffer += buf;
 }
 
 //This function is for poll main loop POLLIN mostly for execution of cmds
@@ -69,7 +69,6 @@ std::string Client::extractLineFromRecv() {
     if (end != std::string::npos) {
         std::string res = _recv_buffer.substr(0, end);
         _recv_buffer.erase(0, end + 1);
-        std::cout << "Extracted line: [" << res << "]" << std::endl;
         return res;
     }
     return "";

@@ -129,6 +129,8 @@ void Server::runPoll() {
                 //delete pollout because I am sending callback for this event and it can lead to infinite search for pollout
                 new_conexion.revents = 0;
                 _poll_fds.push_back(new_conexion);
+                std::string greeting = "Welcome to the server";
+                new_client->queueMessage(greeting + "\n");
             }
         }
         for (size_t i = 1; i < _poll_fds.size(); i++) {
@@ -144,8 +146,6 @@ void Server::runPoll() {
             } if (_poll_fds[i].revents & POLLIN) {
                 char buffer[1024] = {0};
                 size_t bytes_read = recv(_poll_fds[i].fd, buffer, sizeof(buffer), 0);
-                std::cout << "recv() returned: " << bytes_read << " bytes from FD " << _poll_fds[i].fd << std::endl;
-                std::cout << "Buffer content: [" << buffer << "]" << std::endl;
                 if (bytes_read > 0) {
                     curr->appendRecvData(buffer);
                     std::string cmd;
@@ -154,10 +154,8 @@ void Server::runPoll() {
                         //here is parsing and queing message
                         //I will do msg to the diferent client for testing
                         Client* target = findSecondClient(curr->getClientFd());
-                        std::cout << "I am here" << std::endl;
                         if (target) {
-                            std::cout << "Found second client " << target->getClientFd() << std::endl;
-                            target->queueMessage(cmd + "\r\n");
+                            target->queueMessage(cmd + "\n");
                         }
                     }
                 } else if (bytes_read == 0) {
@@ -173,11 +171,9 @@ void Server::runPoll() {
             } if (_poll_fds[i].revents & POLLOUT) {
                 if (curr->hasData()) {
                     const std::string& data_to_send = curr->getSendBuf();
-                    ssize_t bytes = send(_poll_fds[i].fd, data_to_send.data(), data_to_send.length(), 0);
+                    ssize_t bytes = send(_poll_fds[i].fd, data_to_send.data(), data_to_send.size(), 0);
                     if (bytes > 0) {
                         curr->helpSenderEvent(bytes);
-                    } else if (bytes == 0) {
-                        std::cout << "Sent 0 bytes for some reason" << std::endl;
                     } else if (bytes < 0) {
                         std::cerr << "Error: couldn't send msg" << std::endl;
                     }
