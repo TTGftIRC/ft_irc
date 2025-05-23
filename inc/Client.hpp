@@ -42,4 +42,6 @@ class Client {
         bool hasData() const;
         void queueMessage(const std::string& msg);
         void helpSenderEvent(size_t len);
+        //command helper function
+        bool haveNick(void) const;
 };

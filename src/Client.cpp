@@ -112,4 +112,11 @@ void Client::helpSenderEvent(size_t len) {
     }
 }
 
+bool Client::haveNick(void) const {
+    if (!_nickname) {
+        return false;
+    }
+    return true;
+}
+
 Client::~Client(){}

@@ -96,6 +96,25 @@ cmds getCommandEnum(const std::string& cmd) {
     //TODO see what to return for unknown command
 }
 
+void PassCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    if (_parsedCmd.args.size() != 1) {
+        std::string clientName = (_parsedCmd.srcClient.haveNick()) ? _parsedCmd.srcClient->getNickname() : "*";
+        std::string errorMsg = ERR_NEEDMOREPARAMS(clientName, _parsedCmd.cmd);
+        _parsedCmd.srcClient->queueMessage(errorMsg);
+        return;
+    } else if (_parsedCmd.srcClient->getAuth()) {
+        std::string clientName = (_parsedCmd.srcClient.haveNick()) ? _parsedCmd.srcClient->getNickname() : "*";
+        std::string errorMsg = ERR_ALREADYREGISTERED(clientName);
+        _parsedCmd.srcClient->queueMessage(errorMsg);
+        return;
+    } else if (_parsedCmd.args.begin() != server.getPass()) {
+        std::string clientName = (_parsedCmd.srcClient.haveNick()) ? _parsedCmd.srcClient->getNickname() : "*";
+        std::string errorMsg = ERR_PASSWDMISMATCH(clientName);
+        _parsedCmd.srcClient->queueMessage(errorMsg);
+        return;
+    }
+    _parsedCmd.srcClient->setAuth(true);
+}
 
 void PrivmsgCommand::execute(Server & server, const parsedCmd& _parsedCmd) const {
     if (_parsedCmd.args.size() < 2) {

@@ -5,6 +5,11 @@
 class Server;
 class Client;
 
+//macros for error codes
+#define ERR_NEEDMOREPARAMS(client, command) ":ircserver 461 " + client + " " + command + " :Not enough parameters\r\n"
+#define ERR_ALREADYREGISTERED(client) ":ircserver 462 " + client + " :You may not reregister\r\n"
+#define ERR_PASSWDMISMATCH(client) ":ircserver 464 " + client + " :Password incorrect\r\n"
+
 struct parsedCmd {
     std::string cmd;  //command itself
     std::vector<std::string> args;  // all arguments, including channel names and trailing messages
