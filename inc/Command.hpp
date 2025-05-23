@@ -5,20 +5,11 @@
 class Server;
 class Client;
 
-// stuff like in minishell kinda
-// we have parsed command with name
-// then arguments
-// then client who is calling the command
-
 struct parsedCmd {
     std::string cmd;  //command itself
     std::vector<std::string> args;  // all arguments, including channel names and trailing messages
-    std::set<std::string> channels; // only args starting with # (#general)
     Client* srcClient; // who sent the command
 };
-//!!!!!! maybe later on we can change the channels container from vector to set, to avoid duplicates, but that is extra
-// parsing.... don't think we need that
-//maybe we can do a switch case later on using enums
 
 enum cmds {
     PASS,
@@ -31,9 +22,13 @@ enum cmds {
     KICK,
     INVITE,
     TOPIC,
-    MODE
+    MODE,
+    UNKNOWN
 };
 
+cmds getCommandEnum(const std::string& cmd);
+parsedCmd parseInput(const std::string& input, Client* client);
+void _handleClientMessage(Client* client, const std::string& cmd);
 class ICommand {
     public:
         virtual ~ICommand();

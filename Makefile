@@ -1,7 +1,7 @@
 NAME = ircserve
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -Iinclude -g
-SRCS = main.cpp src/Client.cpp src/Server.cpp src/Command.cpp src/Channel.cpp
+SRCS = main.cpp src/Client.cpp src/Command.cpp src/Server.cpp src/Channel.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 GREEN = \033[0;32m
