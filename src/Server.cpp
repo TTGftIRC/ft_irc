@@ -1,4 +1,5 @@
 #include "../inc/Server.hpp"
+#include "../inc/Command.hpp"
 #include <cstring>
 
 void Server::_makeNonBlock(int sock_fd)
@@ -153,6 +154,48 @@ void Server::runPoll() {
                         //IMPORTANT
                         //here is parsing and queing message
                         //I will do msg to the diferent client for testing
+                        parsedCmd parsed = parseInput(cmd, curr);
+                        cmds CommnadEnum = getCommandEnum(parsed.cmd);
+                        switch (CommnadEnum) {
+                            case PASS:
+                                //handle PASS
+                                break;
+                            case NICK:
+                                //handle NICK
+                                break;
+                            case USER:
+                                //handle USER
+                                break;
+                            case JOIN:
+                                //handle JOIN
+                                break;
+                            case PART:
+                                //handle PART
+                                break;
+                            case PRIVMSG:
+                                //handle PRIVMSG
+                                break;
+                            case QUIT:
+                                //handle QUIT
+                                break;
+                            case KICK:
+                                //handle KICK
+                                break;
+                            case INVITE:
+                                //handle INVITE
+                                break;
+                            case TOPIC:
+                                //handle TOPIC
+                                break;
+                            case MODE:
+                                //handle MODE
+                                break;
+                            case UNKNOWN:
+                            default:    
+                                curr->queueMessage("421 " + curr->getNickname() + " " + parsed.cmd + " :Unknown command\r\n");
+                                break;
+                        }
+                        
                         Client* target = findSecondClient(curr->getClientFd());
                         if (target) {
                             target->queueMessage(cmd + "\n");

@@ -1,4 +1,5 @@
 #include "../inc/Command.hpp"
+#include <algorithm>
 
 ICommand::~ICommand() {}
 
@@ -39,6 +40,22 @@ parsedCmd parseInput(const std::string& input, Client* client) {
 // result.channels = {"#general"}
 // result.args = {"#general", "hello there"}
 // result.srcClient = pointer to sender
+
+cmds getCommandEnum(const std::string& cmd) {
+    if (cmd == "PASS") return PASS;
+    if (cmd == "NICK") return NICK;
+    if (cmd == "USER") return USER;
+    if (cmd == "JOIN") return JOIN;
+    if (cmd == "PART") return PART;
+    if (cmd == "PRIVMSG") return PRIVMSG;
+    if (cmd == "QUIT") return QUIT;
+    if (cmd == "KICK") return KICK;
+    if (cmd == "INVITE") return INVITE;
+    if (cmd == "TOPIC") return TOPIC;
+    if (cmd == "MODE") return MODE;
+    return UNKNOWN;
+    //TODO see what to return for unknown command
+}
 
 
 void PrivmsgCommand::execute(Server & server, const parsedCmd& _parsedCmd) const {

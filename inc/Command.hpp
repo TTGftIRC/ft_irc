@@ -31,8 +31,12 @@ enum cmds {
     KICK,
     INVITE,
     TOPIC,
-    MODE
+    MODE,
+    UNKNOWN
 };
+
+cmds getCommandEnum(const std::string& cmd);
+parsedCmd parseInput(const std::string& input, Client* client);
 
 class ICommand {
     public:
