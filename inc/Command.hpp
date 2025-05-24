@@ -6,9 +6,13 @@ class Server;
 class Client;
 
 //macros for error codes
-#define ERR_NEEDMOREPARAMS(client, command) ":ircserver 461 " + client + " " + command + " :Not enough parameters\r\n"
-#define ERR_ALREADYREGISTERED(client) ":ircserver 462 " + client + " :You may not reregister\r\n"
-#define ERR_PASSWDMISMATCH(client) ":ircserver 464 " + client + " :Password incorrect\r\n"
+#define ERR_NEEDMOREPARAMS(client, command) (std::string(":ircserver 461 ") + client + " " + command + " :Not enough parameters\r\n")
+#define ERR_ALREADYREGISTERED(client) (std::string(":ircserver 462 ") + client + " :You may not reregister\r\n")
+#define ERR_PASSWDMISMATCH(client) (std::string(":ircserver 464 ") + client + " :Password incorrect\r\n")
+#define ERR_NONICKNAMEGIVEN(client) (std::string(":ircserver 431 ") + client + " :No nickname given\r\n")
+#define ERR_ERRONEUSNICKNAME(client, nick) (std::string(":ircserver 432 ") + client + " " + nick + " :Erroneus nickname\r\n")
+#define ERR_NICKNAMEINUSE(client, nick) (std::string(":ircserver 433 ") + client + " " + nick + " :Nickname is already in use\r\n")
+//ERR_NICKCOLLISION I am not sure if we have to and how to handle it
 
 struct parsedCmd {
     std::string cmd;  //command itself
@@ -51,6 +55,8 @@ class PassCommand : public ICommand {
 };
 
 class NickCommand : public ICommand {
+    private:
+        bool validChars(const std::string _nick) const;
     void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 

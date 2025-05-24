@@ -3,14 +3,6 @@
 
 ICommand::~ICommand() {}
 
-void NickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
-    _parsedCmd.srcClient->setNickname(_parsedCmd.args[1]);
-    //and add more logic
-    (void)server;
-    //voided out so it's compiling
-}
-
-
 parsedCmd parseInput(const std::string& input, Client* client) {
     std::istringstream iss(input);
     parsedCmd result; //empty struct
@@ -98,22 +90,76 @@ cmds getCommandEnum(const std::string& cmd) {
 
 void PassCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     if (_parsedCmd.args.size() != 1) {
-        std::string clientName = (_parsedCmd.srcClient.haveNick()) ? _parsedCmd.srcClient->getNickname() : "*";
+        std::string clientName = (_parsedCmd.srcClient->getNickFlag()) ? _parsedCmd.srcClient->getNickname() : "*";
         std::string errorMsg = ERR_NEEDMOREPARAMS(clientName, _parsedCmd.cmd);
         _parsedCmd.srcClient->queueMessage(errorMsg);
         return;
     } else if (_parsedCmd.srcClient->getAuth()) {
-        std::string clientName = (_parsedCmd.srcClient.haveNick()) ? _parsedCmd.srcClient->getNickname() : "*";
+        std::string clientName = (_parsedCmd.srcClient->getNickFlag()) ? _parsedCmd.srcClient->getNickname() : "*";
         std::string errorMsg = ERR_ALREADYREGISTERED(clientName);
         _parsedCmd.srcClient->queueMessage(errorMsg);
         return;
-    } else if (_parsedCmd.args.begin() != server.getPass()) {
-        std::string clientName = (_parsedCmd.srcClient.haveNick()) ? _parsedCmd.srcClient->getNickname() : "*";
+    } else if (_parsedCmd.args[0] != server.getPass()) {
+        std::string clientName = (_parsedCmd.srcClient->getNickFlag()) ? _parsedCmd.srcClient->getNickname() : "*";
         std::string errorMsg = ERR_PASSWDMISMATCH(clientName);
         _parsedCmd.srcClient->queueMessage(errorMsg);
         return;
     }
     _parsedCmd.srcClient->setAuth(true);
+}
+
+bool NickCommand::validChars(const std::string _nick) const {
+    if (!isalpha(_nick[0])) {
+        return false;
+    }
+
+    for (std::string::const_iterator it = _nick.begin(); it != _nick.end(); ++it) {
+        char c = *it;
+
+        if (!isalnum(c) &&
+            c != '-' && c != '_' &&
+            c != '[' && c != ']' &&
+            c != '\\' && c != '`' &&
+            c != '^' && c != '{' && c != '}') {
+            return false;
+        }
+    }
+    return true;
+}
+
+void NickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    if (_parsedCmd.args.size() < 1) {
+        std::string clientName = (_parsedCmd.srcClient->getNickFlag()) ? _parsedCmd.srcClient->getNickname() : "*";
+        std::string errorMsg = ERR_NONICKNAMEGIVEN(clientName);
+        _parsedCmd.srcClient->queueMessage(errorMsg);
+        return;
+    } else if (_parsedCmd.args.size() > 1) {
+        std::string clientName = (_parsedCmd.srcClient->getNickFlag()) ? _parsedCmd.srcClient->getNickname() : "*";
+        std::string cmd;
+        for (std::vector<std::string>::const_iterator it = _parsedCmd.args.begin(); it != _parsedCmd.args.end(); ++it) {
+            cmd += *it;
+        }
+        std::string errorMsg = ERR_ERRONEUSNICKNAME(clientName, cmd);
+        _parsedCmd.srcClient->queueMessage(errorMsg);
+        return;
+    } else if (_parsedCmd.args[0].length() > 30) {
+        std::string clientName = (_parsedCmd.srcClient->getNickFlag()) ? _parsedCmd.srcClient->getNickname() : "*";
+        std::string errorMsg = ERR_ERRONEUSNICKNAME(clientName, _parsedCmd.args[0]);
+        _parsedCmd.srcClient->queueMessage(errorMsg);
+        return;
+    } else if (!validChars(_parsedCmd.args[0])) {
+        std::string clientName = (_parsedCmd.srcClient->getNickFlag()) ? _parsedCmd.srcClient->getNickname() : "*";
+        std::string errorMsg = ERR_ERRONEUSNICKNAME(clientName, _parsedCmd.args[0]);
+        _parsedCmd.srcClient->queueMessage(errorMsg);
+        return;
+    } else if (server.getClientByNick(_parsedCmd.args[0])) {
+        std::string clientName = (_parsedCmd.srcClient->getNickFlag()) ? _parsedCmd.srcClient->getNickname() : "*";
+        std::string errorMsg = ERR_NICKNAMEINUSE(clientName, _parsedCmd.args[0]);
+        _parsedCmd.srcClient->queueMessage(errorMsg);
+        return;
+    }
+    _parsedCmd.srcClient->setNickname(_parsedCmd.args[0]);
+    _parsedCmd.srcClient->setNickFlag(true);
 }
 
 void PrivmsgCommand::execute(Server & server, const parsedCmd& _parsedCmd) const {
