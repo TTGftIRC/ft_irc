@@ -34,6 +34,10 @@ bool Client::getAuth(void) const {
     return _authorized;
 }
 
+Server* Client::getServer(void) const {
+    return _serv_ref;
+}
+
 void Client::setNickname(const std::string& nickname) {
     _nickname = nickname;
 }

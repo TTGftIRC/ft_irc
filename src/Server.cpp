@@ -154,7 +154,7 @@ void Server::runPoll() {
                         //IMPORTANT
                         //here is parsing and queing message
                         //I will do msg to the diferent client for testing
-                        _handleClientMessage(curr, cmd);
+                        _handleClientMessage(*this, curr, cmd);
                         Client* target = findSecondClient(curr->getClientFd());
                         if (target) {
                             target->queueMessage(cmd + "\n");
