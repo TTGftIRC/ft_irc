@@ -2,7 +2,7 @@
 #include "../inc/Channel.hpp"
 #include "../inc/Server.hpp"
 
-Client::Client(int client_fd, const std::string& hostname, Server* server) : _serv_ref(server), _client_fd(client_fd), _hostname(hostname), _authorized(false), _ack_msg(false) {
+Client::Client(int client_fd, const std::string& hostname, Server* server) : _serv_ref(server), _client_fd(client_fd), _hostname(hostname), _authorized(false), _nickFlag(false) {
     std::cout << "new client connection " << _client_fd << std::endl;
 }
 
@@ -34,6 +34,10 @@ bool Client::getAuth(void) const {
     return _authorized;
 }
 
+bool Client::getNickFlag(void) const {
+    return _nickFlag;
+}
+
 void Client::setNickname(const std::string& nickname) {
     _nickname = nickname;
 }
@@ -48,6 +52,10 @@ void Client::setRealname(const std::string& realname) {
 
 void Client::setAuth(bool authorized) {
     _authorized = authorized;
+}
+
+void Client::setNickFlag(bool flag) {
+    _nickFlag = flag;
 }
 
 void Client::appendRecvData(const std::string& buf) {

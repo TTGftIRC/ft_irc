@@ -14,6 +14,7 @@ class Client {
         std::string _send_buffer;
         std::string _recv_buffer;
         bool _authorized;
+        bool _nickFlag;
     public:
         //getters
         int getClientFd(void) const;
@@ -23,15 +24,14 @@ class Client {
         const std::string& getHostname(void) const;
         const std::string& getSendBuf(void) const;
         bool getAuth(void) const;
+        bool getNickFlag(void) const;
 
         //setters
         void setNickname(const std::string& nickname);
         void setUsername(const std::string& username);
         void setRealname(const std::string& realname);
         void setAuth(bool authorized);
-
-        bool _ack_msg;
-
+        void setNickFlag(bool flag);
 
         Client(int client_fd, const std::string& hostname, Server* server);
         ~Client();

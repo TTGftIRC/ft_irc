@@ -222,3 +222,7 @@ bool Server::addChannel(const std::string& name) {
     std::cout << GREEN << "Channel " << name << " created succesfully" << RESET << std::endl;
     return true;
 }
+
+const std::string& Server::getPass() {
+    return _pass;
+}
