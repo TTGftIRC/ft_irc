@@ -22,7 +22,6 @@ class Client {
         const std::string& getRealname(void) const;
         const std::string& getHostname(void) const;
         const std::string& getSendBuf(void) const;
-        Server* getServer(void) const;
         bool getAuth(void) const;
 
         //setters
