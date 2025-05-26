@@ -96,7 +96,7 @@ void PassCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
         std::string errorMsg = ERR_NEEDMOREPARAMS(clientName, _parsedCmd.cmd);
         _parsedCmd.srcClient->queueMessage(errorMsg);
         return;
-    } else if (_parsedCmd.srcClient->getAuth()) {
+    } else if (_parsedCmd.srcClient->checkRegistered()) {
         std::string clientName = (_parsedCmd.srcClient->getNickFlag()) ? _parsedCmd.srcClient->getNickname() : "*";
         std::string errorMsg = ERR_ALREADYREGISTERED(clientName);
         _parsedCmd.srcClient->queueMessage(errorMsg);
@@ -162,6 +162,36 @@ void NickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     }
     _parsedCmd.srcClient->setNickname(_parsedCmd.args[0]);
     _parsedCmd.srcClient->setNickFlag(true);
+}
+
+void UserCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    (void)server;
+    std::string clientName = (_parsedCmd.srcClient->getNickFlag()) ? _parsedCmd.srcClient->getNickname() : "*";
+    if (_parsedCmd.srcClient->checkRegistered()) {
+        _parsedCmd.srcClient->queueMessage(ERR_ALREADYREGISTERED(clientName));
+    }
+
+    if (_parsedCmd.args.size() < 4 || _parsedCmd.args[4][0] != ':') {
+        _parsedCmd.srcClient->queueMessage(ERR_NEEDMOREPARAMS(clientName, _parsedCmd.cmd));
+    }
+
+    std::string username = _parsedCmd.args[0];
+    if (_parsedCmd.args[1].length() > 30) {
+        username = username.substr(0, 30);
+    }
+
+    std::string realname;
+    for (size_t i = 3; i < _parsedCmd.args.size(); ++i) {
+        if (i > 3) {
+            realname += " ";
+        }
+        realname += _parsedCmd.args[i];
+    }
+    realname = realname.substr(1);
+
+    _parsedCmd.srcClient->setUsername(username);
+    _parsedCmd.srcClient->setRealname(realname);
+    _parsedCmd.srcClient->setUserFlag(true);
 }
 
 //PRIVMSG

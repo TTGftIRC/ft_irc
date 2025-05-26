@@ -2,7 +2,7 @@
 #include "../inc/Channel.hpp"
 #include "../inc/Server.hpp"
 
-Client::Client(int client_fd, const std::string& hostname, Server* server) : _serv_ref(server), _client_fd(client_fd), _hostname(hostname), _authorized(false), _nickFlag(false) {
+Client::Client(int client_fd, const std::string& hostname, Server* server) : _serv_ref(server), _client_fd(client_fd), _hostname(hostname), _authorized(false), _nickFlag(false), _userFlag(false) {
     std::cout << "new client connection " << _client_fd << std::endl;
 }
 
@@ -38,6 +38,10 @@ bool Client::getNickFlag(void) const {
     return _nickFlag;
 }
 
+bool Client::getUserFlag(void) const {
+    return _userFlag;
+}
+
 void Client::setNickname(const std::string& nickname) {
     _nickname = nickname;
 }
@@ -56,6 +60,10 @@ void Client::setAuth(bool authorized) {
 
 void Client::setNickFlag(bool flag) {
     _nickFlag = flag;
+}
+
+void Client::setUserFlag(bool flag) {
+    _userFlag = flag;
 }
 
 void Client::appendRecvData(const std::string& buf) {
@@ -118,6 +126,13 @@ void Client::helpSenderEvent(size_t len) {
     if (_send_buffer.empty()) {
         _serv_ref->requestPollOut(_client_fd, false);
     }
+}
+
+bool Client::checkRegistered(void) {
+    if (_authorized && _nickFlag && _userFlag) {
+        return true;
+    }
+    return false;
 }
 
 Client::~Client(){}
