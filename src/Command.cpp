@@ -31,47 +31,65 @@ parsedCmd parseInput(const std::string& input, Client* client) {
 void _handleClientMessage(Server& server, Client* client, const std::string& cmd) {
     parsedCmd parsed = parseInput(cmd, client);
     cmds CommnadEnum = getCommandEnum(parsed.cmd);
-    (void)server;
+    // (void)server;
     switch (CommnadEnum) {
-        case PASS:
-            //handle PASS
+        case PASS: {
+            PassCommand passCommand;
+            passCommand.execute(server, parsed);
             break;
-        case NICK:
-            //handle NICK
+        }
+        case NICK:{
+            NickCommand nickCommand;
+            nickCommand.execute(server, parsed);
             break;
-        case USER:
-            //handle USER
+        }
+        case USER: {
+            UserCommand userCommand;
+            userCommand.execute(server, parsed);
             break;
-        case JOIN:
+        }
+        case JOIN: {
             //handle JOIN
             break;
-        case PART:
-            // PartCommand partCommand;
-            // partCommand.execute(servet, parsed);
+        }
+        case PART: {
+            PartCommand partCommand;
+            partCommand.execute(server, parsed);
             break;
-        case PRIVMSG:
-            // PrivmsgCommand privmsgCommand;
-            // privmsgCommand.execute(server, parsed);
+        }
+        case PRIVMSG: {
+            PrivmsgCommand privmsgCommand;
+            privmsgCommand.execute(server, parsed);
             break;
-        case QUIT:
+        }
+        case QUIT: {
             //handle QUIT
             break;
-        case KICK:
-            //handle KICK
+        }
+        case KICK: {
+            KickCommand kickCommand;
+            kickCommand.execute(server, parsed);
             break;
-        case INVITE:
+        }
+        case INVITE: {
             //handle INVITE
             break;
-        case TOPIC:
+        }
+        case TOPIC: {
             //handle TOPIC
             break;
-        case MODE:
+        }
+        case MODE: {
             //handle MODE
             break;
-        case UNKNOWN:
-        default:    
-            client->queueMessage(":ircserver 421 " + client->getNickname() + " " + parsed.cmd + " :Unknown command\r\n");
+        }
+        case UNKNOWN: {
             break;
+        }
+        default: {
+            //client->queueMessage("421 " + client->getNickname() + " " + parsed.cmd + " :Unknown command\r\n");
+            break;
+        }
     }
 }
 
@@ -96,7 +114,7 @@ void PassCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
         std::string errorMsg = ERR_NEEDMOREPARAMS(clientName, _parsedCmd.cmd);
         _parsedCmd.srcClient->queueMessage(errorMsg);
         return;
-    } else if (_parsedCmd.srcClient->getAuth()) {
+    } else if (_parsedCmd.srcClient->checkRegistered()) {
         std::string clientName = (_parsedCmd.srcClient->getNickFlag()) ? _parsedCmd.srcClient->getNickname() : "*";
         std::string errorMsg = ERR_ALREADYREGISTERED(clientName);
         _parsedCmd.srcClient->queueMessage(errorMsg);
@@ -162,6 +180,38 @@ void NickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     }
     _parsedCmd.srcClient->setNickname(_parsedCmd.args[0]);
     _parsedCmd.srcClient->setNickFlag(true);
+}
+
+void UserCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    (void)server;
+    std::string clientName = (_parsedCmd.srcClient->getNickFlag()) ? _parsedCmd.srcClient->getNickname() : "*";
+    if (_parsedCmd.srcClient->checkRegistered()) {
+        _parsedCmd.srcClient->queueMessage(ERR_ALREADYREGISTERED(clientName));
+    }
+
+    if (_parsedCmd.args.size() < 4 || _parsedCmd.args[4][0] != ':') {
+        _parsedCmd.srcClient->queueMessage(ERR_NEEDMOREPARAMS(clientName, _parsedCmd.cmd));
+    }
+
+    std::string username = _parsedCmd.args[0];
+    if (_parsedCmd.args[1].length() > 30) {
+        username = username.substr(0, 30);
+    }
+
+    std::string realname;
+    for (size_t i = 3; i < _parsedCmd.args.size(); ++i) {
+        if (i > 3) {
+            realname += " ";
+        }
+        realname += _parsedCmd.args[i];
+    }
+    realname = realname.substr(1);
+
+    _parsedCmd.srcClient->setUsername(username);
+    _parsedCmd.srcClient->setRealname(realname);
+    _parsedCmd.srcClient->setUserFlag(true);
+
+    _parsedCmd.srcClient->queueMessage(RPL_WELCOME(_parsedCmd.srcClient->getNickname()));
 }
 
 //PRIVMSG

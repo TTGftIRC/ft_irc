@@ -6,6 +6,7 @@ class Server;
 class Client;
 
 //macros for error codes
+#define RPL_WELCOME(nick) (std::string(":ircserver 001 Welcome to the server, ") + nick + "!\r\n")
 #define ERR_NEEDMOREPARAMS(client, command) (std::string(":ircserver 461 ") + client + " " + command + " :Not enough parameters\r\n")
 #define ERR_ALREADYREGISTERED(client) (std::string(":ircserver 462 ") + client + " :You may not reregister\r\n")
 #define ERR_PASSWDMISMATCH(client) (std::string(":ircserver 464 ") + client + " :Password incorrect\r\n")
@@ -51,25 +52,30 @@ class ICommand {
 //I will do just a example command (incorrect behaviour anyways because we don't have parser yet)
 
 class PassCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd) const;
+    public:
+        void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class NickCommand : public ICommand {
     private:
         bool validChars(const std::string _nick) const;
-    void execute(Server& server, const parsedCmd& _parsedCmd) const;
+    public:
+        void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class UserCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd) const;
+    public:
+        void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class JoinCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd) const;
+    public:
+        void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class PartCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd) const;
+    public:
+        void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class PrivmsgCommand : public ICommand {
@@ -82,7 +88,8 @@ public:
 };
 
 class QuitCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd) const;
+    public:
+        void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class KickCommand : public ICommand {
@@ -96,13 +103,16 @@ public:
 };
 
 class InviteCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd) const;
+    public:
+        void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class TopicCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd) const;
+    public:
+        void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class ModeCommand : public ICommand {
-    void execute(Server& server, const parsedCmd& _parsedCmd) const;
+    public:
+        void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
