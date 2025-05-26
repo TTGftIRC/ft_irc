@@ -81,10 +81,10 @@ void Client::appendRecvData(const std::string& buf) {
 // }
 
 std::string Client::extractLineFromRecv() {
-    size_t end = _recv_buffer.find("\n");
+    size_t end = _recv_buffer.find("\r\n");
     if (end != std::string::npos) {
         std::string res = _recv_buffer.substr(0, end);
-        _recv_buffer.erase(0, end + 1);
+        _recv_buffer.erase(0, end + 2);
         return res;
     }
     return "";

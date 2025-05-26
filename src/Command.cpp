@@ -31,47 +31,64 @@ parsedCmd parseInput(const std::string& input, Client* client) {
 void _handleClientMessage(Server& server, Client* client, const std::string& cmd) {
     parsedCmd parsed = parseInput(cmd, client);
     cmds CommnadEnum = getCommandEnum(parsed.cmd);
-    (void)server;
+    // (void)server;
     switch (CommnadEnum) {
-        case PASS:
-            //handle PASS
+        case PASS: {
+            PassCommand passCommand;
+            passCommand.execute(server, parsed);
             break;
-        case NICK:
-            //handle NICK
+        }
+        case NICK:{
+            NickCommand nickCommand;
+            nickCommand.execute(server, parsed);
             break;
-        case USER:
-            //handle USER
+        }
+        case USER: {
+            UserCommand userCommand;
+            userCommand.execute(server, parsed);
             break;
-        case JOIN:
+        }
+        case JOIN: {
             //handle JOIN
             break;
-        case PART:
-            // PartCommand partCommand;
-            // partCommand.execute(servet, parsed);
+        }
+        case PART: {
+            PartCommand partCommand;
+            partCommand.execute(server, parsed);
             break;
-        case PRIVMSG:
-            // PrivmsgCommand privmsgCommand;
-            // privmsgCommand.execute(server, parsed);
+        }
+        case PRIVMSG: {
+            PrivmsgCommand privmsgCommand;
+            privmsgCommand.execute(server, parsed);
             break;
-        case QUIT:
+        }
+        case QUIT: {
             //handle QUIT
             break;
-        case KICK:
+        }
+        case KICK: {
             //handle KICK
             break;
-        case INVITE:
+        }
+        case INVITE: {
             //handle INVITE
             break;
-        case TOPIC:
+        }
+        case TOPIC: {
             //handle TOPIC
             break;
-        case MODE:
+        }
+        case MODE: {
             //handle MODE
             break;
-        case UNKNOWN:
-        default:    
-            client->queueMessage("421 " + client->getNickname() + " " + parsed.cmd + " :Unknown command\r\n");
+        }
+        case UNKNOWN: {
             break;
+        }
+        default: {
+            //client->queueMessage("421 " + client->getNickname() + " " + parsed.cmd + " :Unknown command\r\n");
+            break;
+        }
     }
 }
 
@@ -192,6 +209,8 @@ void UserCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     _parsedCmd.srcClient->setUsername(username);
     _parsedCmd.srcClient->setRealname(realname);
     _parsedCmd.srcClient->setUserFlag(true);
+
+    _parsedCmd.srcClient->queueMessage(RPL_WELCOME(_parsedCmd.srcClient->getNickname()));
 }
 
 //PRIVMSG
