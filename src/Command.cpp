@@ -169,7 +169,7 @@ void PrivmsgCommand::execute(Server& server, const parsedCmd& _parsedCmd) const 
     Client* sender = _parsedCmd.srcClient;
     //check if we have a min of 2 args
     if (_parsedCmd.args.size() < 2) {
-        std::string errorMessage = "461 " + sender->getNickname() + " PRIVMSG: Not enough parameters!\r\n";
+        std::string errorMessage = "ircserver 461 " + sender->getNickname() + " PRIVMSG: Not enough parameters!\r\n";
         sender->queueMessage(errorMessage);
         return;
     }
@@ -180,7 +180,7 @@ void PrivmsgCommand::execute(Server& server, const parsedCmd& _parsedCmd) const 
         message = message.substr(1); //eliminate the ':'
     }
     if (message.empty()) {
-        std::string errorMessage = "412 " + sender->getNickname() + " :No text to send!\r\n";
+        std::string errorMessage = ":ircserver 412 " + sender->getNickname() + " :No text to send!\r\n";
         sender->queueMessage(errorMessage);
         return;
     }
@@ -188,7 +188,7 @@ void PrivmsgCommand::execute(Server& server, const parsedCmd& _parsedCmd) const 
     std::vector<std::string> targets = parseTargets(targetsString);
     // check if we have any targets
     if (targets.empty()) {
-        std::string errorMessage = "411 " + sender->getNickname() + " :No recipient given (PRIVMSG)\r\n";
+        std::string errorMessage = ":ircserver 411 " + sender->getNickname() + " :No recipient given (PRIVMSG)\r\n";
         sender->queueMessage(errorMessage);
         return;
     }
@@ -241,14 +241,14 @@ void PrivmsgCommand::handleChannelMessage(Server& server, Client* sender,
     Channel* channel = server.getChannel(channelName);
     if (channel == NULL) {
         //IRC 403:ERR_NOSUCHCHANNEL
-        std::string errorMessage = "403 " + sender->getNickname() + " " + channelName + " :No such channel\r\n";
+        std::string errorMessage = "ircserver 403 " + sender->getNickname() + " " + channelName + " :No such channel\r\n";
         sender->queueMessage(errorMessage);
         return;
     }
     //check if sender is part of channel
     if (!channel->hasClient(sender->getNickname())) {
         //IRC 404:ERR_CANNOTSENDTOCHAN
-        std::string errorMessage = "404 " + sender->getNickname() + channelName + " :Cannot send to channel\r\n";
+        std::string errorMessage = "ircserver 404 " + sender->getNickname() + channelName + " :Cannot send to channel\r\n";
         sender->queueMessage(errorMessage);
         return;
     }
@@ -267,7 +267,7 @@ void PrivmsgCommand::handlePrivateMessage(Server& server, Client* sender,
     //if target doesn't exist
     if (target == NULL) {
         //irc 401: ERR_NOSUCHNICK
-        std::string errorMessage = "401 " + sender->getNickname() + " " + targetNick + " :No such nick/channel\r\n";
+        std::string errorMessage = ":ircserver 401 " + sender->getNickname() + " " + targetNick + " :No such nick/channel\r\n";
         sender->queueMessage(errorMessage);
         return;
     }
@@ -284,7 +284,7 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     Client* sender = _parsedCmd.srcClient;
     if (_parsedCmd.args[1].empty()) {
         //IRC 461:ERR_NEEDMOREPARAMS
-        std::string errorMessage = "461 " + sender->getNickname() + " PART :Not enough parameters\r\n";
+        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " PART :Not enough parameters\r\n";
         sender->queueMessage(errorMessage);
         return;
     }
@@ -324,13 +324,13 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
         Channel* channel = server.getChannel(channelName);
         if (channel == NULL) {
             //IRC 403: ERR_NOSUCHCHANNEL
-            std::string errorMessage = "403 " + sender->getNickname() + " " + channelName + " :No such channel\r\n";
+            std::string errorMessage = ":ircserver 403 " + sender->getNickname() + " " + channelName + " :No such channel\r\n";
             sender->queueMessage(errorMessage);
             continue;
         }
         if (!channel->hasClient(sender->getNickname())) {
             //IRC 442: ERR_NOTONCHANNEL
-            std::string errorMessage = "442 " + sender->getNickname() + " " + channelName + " :You're not on that channel\r\n";
+            std::string errorMessage = ":ircserver 442 " + sender->getNickname() + " " + channelName + " :You're not on that channel\r\n";
             sender->queueMessage(errorMessage);
             continue;
         }
