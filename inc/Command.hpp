@@ -93,8 +93,13 @@ class QuitCommand : public ICommand {
 };
 
 class KickCommand : public ICommand {
-    public:
-        void execute(Server& server, const parsedCmd& _parsedCmd) const;
+private:
+    void kickFromChannel(Server& server, Client* sender, 
+                                  const std::string& channelName, 
+                                  const std::string& targetNick, 
+                                  const std::string& reason) const;
+public:
+    void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class InviteCommand : public ICommand {
