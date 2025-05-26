@@ -282,7 +282,7 @@ void PrivmsgCommand::handlePrivateMessage(Server& server, Client* sender,
 
 void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     Client* sender = _parsedCmd.srcClient;
-    if (_parsedCmd.args[1].empty()) {
+    if (_parsedCmd.args.size() < 1) {
         //IRC 461:ERR_NEEDMOREPARAMS
         std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " PART :Not enough parameters\r\n";
         sender->queueMessage(errorMessage);
@@ -347,3 +347,12 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     }
 
 }
+
+// //KICK
+
+// void KickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+//     Client* sender = _parsedCmd.srcClient;
+//     if (_parsedCmd.args.size() < 1) {
+//         //
+//     }
+// }
