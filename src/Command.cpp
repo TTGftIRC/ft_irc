@@ -70,7 +70,7 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             break;
         case UNKNOWN:
         default:    
-            client->queueMessage("421 " + client->getNickname() + " " + parsed.cmd + " :Unknown command\r\n");
+            client->queueMessage(":ircserver 421 " + client->getNickname() + " " + parsed.cmd + " :Unknown command\r\n");
             break;
     }
 }
@@ -169,7 +169,7 @@ void PrivmsgCommand::execute(Server& server, const parsedCmd& _parsedCmd) const 
     Client* sender = _parsedCmd.srcClient;
     //check if we have a min of 2 args
     if (_parsedCmd.args.size() < 2) {
-        std::string errorMessage = "ircserver 461 " + sender->getNickname() + " PRIVMSG: Not enough parameters!\r\n";
+        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " PRIVMSG: Not enough parameters!\r\n";
         sender->queueMessage(errorMessage);
         return;
     }
@@ -241,22 +241,22 @@ void PrivmsgCommand::handleChannelMessage(Server& server, Client* sender,
     Channel* channel = server.getChannel(channelName);
     if (channel == NULL) {
         //IRC 403:ERR_NOSUCHCHANNEL
-        std::string errorMessage = "ircserver 403 " + sender->getNickname() + " " + channelName + " :No such channel\r\n";
+        std::string errorMessage = ":ircserver 403 " + sender->getNickname() + " " + channelName + " :No such channel\r\n";
         sender->queueMessage(errorMessage);
         return;
     }
     //check if sender is part of channel
     if (!channel->hasClient(sender->getNickname())) {
         //IRC 404:ERR_CANNOTSENDTOCHAN
-        std::string errorMessage = "ircserver 404 " + sender->getNickname() + channelName + " :Cannot send to channel\r\n";
+        std::string errorMessage = ":ircserver 404 " + sender->getNickname() + channelName + " :Cannot send to channel\r\n";
         sender->queueMessage(errorMessage);
         return;
     }
     //let's try to format the message like a propper irc message 
     // Format: :<sender_nick>!<user>@<host> PRIVMSG <channel> :<message>    
     std::string formattedMessage = ":" + sender->getNickname() + "!" + sender->getUsername() +
-                                    "@" + sender->getHostname() + " PRIVMSG" + 
-                                    channelName + " : " + message + "\r\n";
+                                    "@" + sender->getHostname() + " PRIVMSG " + 
+                                    channelName + " :" + message + "\r\n";
     channel->broadcast(formattedMessage, sender->getNickname());//send the message to all the channel members but the sender
 }
 
@@ -299,8 +299,7 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
                 channels.push_back(current);
                 current.clear();
             }
-        }
-        else {
+        } else {
             current += c;
         }
     }
@@ -313,7 +312,7 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     std::string reason;
     if (_parsedCmd.args.size() > 1) {
         reason = _parsedCmd.args[1];
-        if (!reason.empty() && reason[0] == ':') {
+        if (!reason.empty() && reason[0] == ':') { // this is more strict(we could also skip the checking of ':' at the begining of the reason)
             reason = reason.substr(1);
         } else {
             reason = sender->getNickname(); // if there is no reason , we just pass the name of the client
@@ -334,12 +333,16 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
             sender->queueMessage(errorMessage);
             continue;
         }
-        //now notify the channel users 
-        std::string msg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" + sender->getHostname()
-                            + " PART " + channelName + " :" + reason + "\r\n";
-        channel->broadcast(msg, sender->getNickname());
-        //remove the client from the channel
-        channel->removeClient(sender->getNickname());
+        if (channel->getClientCount() > 0 && channel->getOperatorCount() == 0) {
+            Client* newOP = channel->getFirstClient();
+                if (newOP && channel->addOperator(newOP->getNickname())) {
+                    channel->broadcast(newOP->getNickname() + " has become an opperator\r\n");
+                    //!!! will change this message , but for now i care about functionality
+                    //!!! maybe need to make the message look like a MODE +o message
+                    //std::string modeMsg = ":ircserver MODE " + channelName + " +o " + newOP->getNickname() + "\r\n";
+                    // channel->broadcast(modeMsg);
+                }
+        }
         //if no one remains, delete channel
         if (channel->getClientCount() == 0) {
             server.removeChannel(channelName);
@@ -348,11 +351,118 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
 
 }
 
-// //KICK
+//KICK
 
-// void KickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
-//     Client* sender = _parsedCmd.srcClient;
-//     if (_parsedCmd.args.size() < 1) {
-//         //
-//     }
-// }
+void KickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    Client* sender = _parsedCmd.srcClient;
+    if (_parsedCmd.args.size() < 2) {
+        //IRC 461: ERR_NEEDMOREPARAMS
+        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " KICK :Not enough parameters\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    //sepparate the channels and the users by ','
+    std::string channelsString = _parsedCmd.args[0];
+    std::vector<std::string> channels;
+    std::string currentChannel;
+    for (size_t i = 0; i < channelsString.length(); ++i) {
+        char c = channelsString[i];
+        if (c == ',') {
+            if (!currentChannel.empty()) {
+                channels.push_back(currentChannel);
+                currentChannel.clear();
+            }
+        } else {
+            currentChannel += c;
+        }
+    }
+    if (!currentChannel.empty()) {
+        channels.push_back(currentChannel);
+        currentChannel.clear();
+    }
+    std::string usersString = _parsedCmd.args[1];
+    std::vector<std::string> users;
+    std::string currentUser;
+    for (size_t i = 0; i < usersString.length(); ++i) {
+        char u = usersString[i];
+        if (u == ',') {
+            if (!currentUser.empty()) {
+                users.push_back(currentUser);
+                currentUser.clear();
+            }
+        } else {
+            currentUser += u;
+        }
+    }
+    if (!currentUser.empty()) {
+        users.push_back(currentUser);
+        currentUser.clear();
+    }
+
+    //check for reason, if none, or wrongly set(without :) then the reason will be the operator's nickname
+    std::string reason = (_parsedCmd.args.size() > 2) ? _parsedCmd.args[2] : sender->getNickname();
+    if (!reason.empty() && reason[0] == ':') {
+        reason = reason.substr(1);
+    }
+
+    size_t numChannels = channels.size();
+    size_t numUsers = users.size();
+
+    if (numChannels == numUsers) {
+        for (size_t i = 0; i < numChannels; ++i) {
+            kickFromChannel(server, sender, channels[i], users[i], reason);
+        }
+    } else if (numChannels == 1) {
+        for (size_t i = 0; i < numUsers; ++i) {
+            kickFromChannel(server, sender, channels[0], users[i], reason);
+        }
+    } else if (numUsers == 1) {
+        for(size_t i = 0; i < numChannels; ++i) {
+            kickFromChannel(server, sender, channels[i], users[0], reason);
+        }
+    }
+}
+
+void KickCommand::kickFromChannel(Server& server, Client* sender, 
+                                  const std::string& channelName, 
+                                  const std::string& targetNick, 
+                                  const std::string& reason) const {
+    Channel* channel = server.getChannel(channelName);
+    if (!channel) {
+        //IRC 403:ERR_NOSUCHCHANNEL 
+        std::string errorMessage = ":ircserver 403 " + sender->getNickname() + " " + channelName + " :No such channel\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    if (!channel->hasClient(sender->getNickname())) {
+        //IRC 442:ERR_NOTONCHANNEL
+        std::string errorMessage = "ircserver 442 " + sender->getNickname() + " " + channelName + " :You're not on that channel\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    if (!channel->isOperator(sender->getNickname())) {
+        //IRC 482:ERR_CHANOPRIVSNEEDED
+        std::string errorMessage = ":ircserver 482 " + sender->getNickname() + " " + channelName + " :You're not channel operator\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    if (!channel->hasClient(targetNick)) {
+        //IRC 441:ERR_USERNOTINCHANNEL
+        std::string errorMessage = ":ircserver 441 " + sender->getNickname() + " " + targetNick + " " + channelName + " :They aren't on that channel\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    //!!! ALSO can't kick yourself out of the channel
+    if (sender->getNickname() == targetNick) {
+        //IRC 482:ERR_CHANOPRIVSNEEDED but personal
+        std::string errorMessage = ":ircserver 482 " + sender->getNickname() + " " + channelName + " :You can't kick yourself, use PART instead\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    // Format: :kicker!user@host KICK <channel> <target> :reason
+    std::string kickMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" + sender->getHostname() + " KICK " +
+                            channelName + " " + targetNick + " :" + reason + "\r\n";
+    channel->broadcast(kickMsg);
+    // now remove the target from channel
+    channel->removeClient(targetNick);
+}

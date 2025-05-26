@@ -69,4 +69,6 @@ public:
 
     // Helpers
     size_t getClientCount() const;
+    size_t getOperatorCount() const;
+    Client* getFirstClient() const;
 };
