@@ -14,7 +14,7 @@ parsedCmd parseInput(const std::string& input, Client* client) {
             if (token[0] == ':') {  // example: PRIVMSG #general :hello there  
                 std::string rest;
                 std::getline(iss, rest);
-                result.args.push_back(token.substr(1) + rest); // reconstruct the full trailing argument ("hello there")
+                result.args.push_back(token + rest); // reconstruct the full trailing argument (":hello there")
                 break;
             }
             result.args.push_back(token);  // if the token doesn't start with : just push as regular arg
@@ -25,12 +25,13 @@ parsedCmd parseInput(const std::string& input, Client* client) {
 // so result from PRIVMSG #general :hello there
 //                  is
 // result.cmd = "PRIVMSG"
-// result.args = {"#general", "hello there"}
+// result.args = {"#general", ":hello there"}
 // result.srcClient = pointer to sender
 
-void _handleClientMessage(Client* client, const std::string& cmd) {
+void _handleClientMessage(Server& server, Client* client, const std::string& cmd) {
     parsedCmd parsed = parseInput(cmd, client);
     cmds CommnadEnum = getCommandEnum(parsed.cmd);
+    (void)server;
     switch (CommnadEnum) {
         case PASS:
             //handle PASS
@@ -45,10 +46,12 @@ void _handleClientMessage(Client* client, const std::string& cmd) {
             //handle JOIN
             break;
         case PART:
-            //handle PART
+            // PartCommand partCommand;
+            // partCommand.execute(servet, parsed);
             break;
         case PRIVMSG:
-            //handle PRIVMSG
+            // PrivmsgCommand privmsgCommand;
+            // privmsgCommand.execute(server, parsed);
             break;
         case QUIT:
             //handle QUIT
@@ -85,7 +88,6 @@ cmds getCommandEnum(const std::string& cmd) {
     if (cmd == "TOPIC") return TOPIC;
     if (cmd == "MODE") return MODE;
     return UNKNOWN;
-    //TODO see what to return for unknown command
 }
 
 void PassCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
@@ -162,41 +164,195 @@ void NickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     _parsedCmd.srcClient->setNickFlag(true);
 }
 
-void PrivmsgCommand::execute(Server & server, const parsedCmd& _parsedCmd) const {
+//PRIVMSG
+void PrivmsgCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    Client* sender = _parsedCmd.srcClient;
+    //check if we have a min of 2 args
     if (_parsedCmd.args.size() < 2) {
-        // _parsedCmd.srcClient->sendMessage("ERROR: PRIVMSG requires a target and a message");
-        // return;      UNCOMMENT AFTER I HAVE A SENDMESSAGE FROM CLIENT
+        std::string errorMessage = "ircserver 461 " + sender->getNickname() + " PRIVMSG: Not enough parameters!\r\n";
+        sender->queueMessage(errorMessage);
+        return;
     }
-    std::string target = _parsedCmd.args[0];
-    std::string message = _parsedCmd.args[1];
-    std::string senderNick = _parsedCmd.srcClient->getNickname();
-
-    (void) server; // just to be able to compile until i get my hands on a server.getChannel(target)(line 63) method TODO
-
-    // If the target of the prvmsg is a channel
-    // if (target[0] == '#') {
-        // Channel* channel = server.getChannel(target); I NEED THIS, MAYBE WILL IMPLEMENT LATER OR ONE OF YOU GUYS
-    // }
-    // if (!channel) {
-    //     _parsedCmd.srcClient->sendMessage("ERROR: No such channel");
-    //     return; 
-    // }
-    // if (!channel->hasClient(senderNick)) {
-    //     _parsedCmd.srcClient->sendMessage("ERROR: You are not on that channel");
-    //     return;
-    // }
-    // std::string fullMessage = ":" + senderNick + " PRIVMSG " + target + " :" + message;
-    // channel->broadcast(fullMessage, senderNick);
-
-    // Else assume the PRIVMSG is for another user
-    // else {
-        // Client* targetClient = server.getClientByNickname(target);
-        // if (!targetClient) {
-            // _parsedCmd.srcClient->sendMessage("ERROR: No such nickname");
-            // return;
-        // }
-        // std::string fullMessage = ":" + senderNick + " PRIVMSG " + target + " :" + message;
-        // targetClient->sendMessage(fullMessage);
-    // }
+    std::string targetsString = _parsedCmd.args[0]; // channel or client
+    std::string message = _parsedCmd.args[1]; //message
+    
+    if (!message.empty() && message[0] == ':') {
+        message = message.substr(1); //eliminate the ':'
+    }
+    if (message.empty()) {
+        std::string errorMessage = ":ircserver 412 " + sender->getNickname() + " :No text to send!\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    //parse multiple targets, separated by commas
+    std::vector<std::string> targets = parseTargets(targetsString);
+    // check if we have any targets
+    if (targets.empty()) {
+        std::string errorMessage = ":ircserver 411 " + sender->getNickname() + " :No recipient given (PRIVMSG)\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    for (std::vector<std::string>::const_iterator it = targets.begin(); it != targets.end(); ++it) {
+        const std::string target = *it;
+        if (target.empty()) {
+            continue;   // if one target is empty just skip it
+        }
+        //now we decide if target is a channel or a client/user
+        if (target[0] == '#' || target[0] == '+' || target[0] == '!' || target[0] == '&') {
+            // target == channel
+            handleChannelMessage(server, sender, target, message);
+        }
+        else {
+            //target == user
+            handlePrivateMessage(server, sender, target, message);
+        }
+    }
 }
 
+std::vector<std::string> PrivmsgCommand::parseTargets(const std::string& targetsString) const {
+    std::vector<std::string> targets;
+    std::string current;
+
+    //we separate targets by commas
+    for (size_t i = 0; i < targetsString.length(); ++i) {
+        char c = targetsString[i];
+
+        if (c == ',') {
+            //add the current target to the vector if not empty
+            if (!current.empty()) {
+                targets.push_back(current);
+                current.clear();
+            }
+        } else {
+            //add the char to the current target;
+            current += c;
+        }
+    }
+    //add last target to the vector, if not empty
+    if (!current.empty()) {
+        targets.push_back(current);
+    }
+    return targets;
+}
+
+void PrivmsgCommand::handleChannelMessage(Server& server, Client* sender,
+                                            const std::string& channelName, 
+                                                const std::string& message) const {
+    Channel* channel = server.getChannel(channelName);
+    if (channel == NULL) {
+        //IRC 403:ERR_NOSUCHCHANNEL
+        std::string errorMessage = "ircserver 403 " + sender->getNickname() + " " + channelName + " :No such channel\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    //check if sender is part of channel
+    if (!channel->hasClient(sender->getNickname())) {
+        //IRC 404:ERR_CANNOTSENDTOCHAN
+        std::string errorMessage = "ircserver 404 " + sender->getNickname() + channelName + " :Cannot send to channel\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    //let's try to format the message like a propper irc message 
+    // Format: :<sender_nick>!<user>@<host> PRIVMSG <channel> :<message>    
+    std::string formattedMessage = ":" + sender->getNickname() + "!" + sender->getUsername() +
+                                    "@" + sender->getHostname() + " PRIVMSG" + 
+                                    channelName + " : " + message + "\r\n";
+    channel->broadcast(formattedMessage, sender->getNickname());//send the message to all the channel members but the sender
+}
+
+void PrivmsgCommand::handlePrivateMessage(Server& server, Client* sender,
+                                            const std::string& targetNick,
+                                            const std::string& message) const {
+    Client* target = server.getClientByNick(targetNick);
+    //if target doesn't exist
+    if (target == NULL) {
+        //irc 401: ERR_NOSUCHNICK
+        std::string errorMessage = ":ircserver 401 " + sender->getNickname() + " " + targetNick + " :No such nick/channel\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    // Format: :<sender_nick>!<user>@<host> PRIVMSG <target_nick> :<message>
+    std::string formattedMessage = ":" + sender->getNickname() + "!" + sender->getUsername() + 
+                                    "@" + sender->getHostname() + " PRIVMSG " + 
+                                    targetNick + " :" + message + "\r\n";
+    target->queueMessage(formattedMessage);
+}
+
+//PART
+
+void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    Client* sender = _parsedCmd.srcClient;
+    if (_parsedCmd.args.size() < 1) {
+        //IRC 461:ERR_NEEDMOREPARAMS
+        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " PART :Not enough parameters\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    //split channels by comma
+    std::string channelsString = _parsedCmd.args[0];
+    std::vector<std::string> channels;
+    std::string current;
+    for (size_t i = 0; i < channelsString.length(); ++i) {
+        char c = channelsString[i];
+        if (c == ',') {
+            if (!current.empty()) {
+                channels.push_back(current);
+                current.clear();
+            }
+        }
+        else {
+            current += c;
+        }
+    }
+    if (!current.empty()) {
+        channels.push_back(current);
+    }
+
+    // if there is a message like PART #general :Goodbye!
+    // that means we will have two args in the _parsedCmd args vector, and we take args[1] as the "reason"
+    std::string reason;
+    if (_parsedCmd.args.size() > 1) {
+        reason = _parsedCmd.args[1];
+        if (!reason.empty() && reason[0] == ':') {
+            reason = reason.substr(1);
+        } else {
+            reason = sender->getNickname(); // if there is no reason , we just pass the name of the client
+        }
+    }
+    for (size_t i = 0; i < channels.size(); ++i) {
+        const std::string& channelName = channels[i];
+        Channel* channel = server.getChannel(channelName);
+        if (channel == NULL) {
+            //IRC 403: ERR_NOSUCHCHANNEL
+            std::string errorMessage = ":ircserver 403 " + sender->getNickname() + " " + channelName + " :No such channel\r\n";
+            sender->queueMessage(errorMessage);
+            continue;
+        }
+        if (!channel->hasClient(sender->getNickname())) {
+            //IRC 442: ERR_NOTONCHANNEL
+            std::string errorMessage = ":ircserver 442 " + sender->getNickname() + " " + channelName + " :You're not on that channel\r\n";
+            sender->queueMessage(errorMessage);
+            continue;
+        }
+        //now notify the channel users 
+        std::string msg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" + sender->getHostname()
+                            + " PART " + channelName + " :" + reason + "\r\n";
+        channel->broadcast(msg, sender->getNickname());
+        //remove the client from the channel
+        channel->removeClient(sender->getNickname());
+        //if no one remains, delete channel
+        if (channel->getClientCount() == 0) {
+            server.removeChannel(channelName);
+        }
+    }
+
+}
+
+// //KICK
+
+// void KickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+//     Client* sender = _parsedCmd.srcClient;
+//     if (_parsedCmd.args.size() < 1) {
+//         //
+//     }
+// }

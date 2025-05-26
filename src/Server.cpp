@@ -154,7 +154,7 @@ void Server::runPoll() {
                         //IMPORTANT
                         //here is parsing and queing message
                         //I will do msg to the diferent client for testing
-                        _handleClientMessage(curr, cmd);
+                        _handleClientMessage(*this, curr, cmd);
                         Client* target = findSecondClient(curr->getClientFd());
                         if (target) {
                             target->queueMessage(cmd + "\n");
@@ -225,4 +225,14 @@ bool Server::addChannel(const std::string& name) {
 
 const std::string& Server::getPass() {
     return _pass;
+}
+
+void Server::removeChannel(const std::string& channelName) {
+    for (std::set<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        if ((*it)->getName() == channelName) {
+            delete *it;
+            _channels.erase(it);
+            break;
+        }
+    }
 }

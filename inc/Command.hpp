@@ -37,7 +37,7 @@ enum cmds {
 
 cmds getCommandEnum(const std::string& cmd);
 parsedCmd parseInput(const std::string& input, Client* client);
-void _handleClientMessage(Client* client, const std::string& cmd);
+void _handleClientMessage(Server& server, Client* client, const std::string& cmd);
 class ICommand {
     public:
         virtual ~ICommand();
@@ -73,6 +73,11 @@ class PartCommand : public ICommand {
 };
 
 class PrivmsgCommand : public ICommand {
+private:
+    void handleChannelMessage(Server& server, Client* sender, const std::string& channelName , const std::string& messgae) const;
+    void handlePrivateMessage(Server& server, Client* sender, const std::string& targetNickname , const std::string& message) const;
+    std::vector<std::string> parseTargets(const std::string& targetsString) const;
+public:
     void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
