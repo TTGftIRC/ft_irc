@@ -150,3 +150,7 @@ void Channel::broadcast(const std::string& message, const std::string& senderNic
 
 //Helpers
 size_t Channel::getClientCount() const { return _clients.size(); }
+
+size_t Channel::getOperatorCount() const { return _operators.size(); }
+
+Client* Channel::getFirstClient() const { return _clients.empty() ? NULL : *_clients.begin(); }

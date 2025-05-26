@@ -130,8 +130,6 @@ void Server::runPoll() {
                 //delete pollout because I am sending callback for this event and it can lead to infinite search for pollout
                 new_conexion.revents = 0;
                 _poll_fds.push_back(new_conexion);
-                std::string greeting = "Welcome to the server";
-                new_client->queueMessage(greeting + "\n");
             }
         }
         for (size_t i = 1; i < _poll_fds.size(); i++) {
@@ -154,11 +152,12 @@ void Server::runPoll() {
                         //IMPORTANT
                         //here is parsing and queing message
                         //I will do msg to the diferent client for testing
-                        _handleClientMessage(curr, cmd);
-                        Client* target = findSecondClient(curr->getClientFd());
-                        if (target) {
-                            target->queueMessage(cmd + "\n");
-                        }
+                        std::cout << "RECV " << curr->getClientFd() << ": " << cmd << std::endl;
+                        _handleClientMessage(*this, curr, cmd);
+                        // Client* target = findSecondClient(curr->getClientFd());
+                        // if (target) {
+                        //     target->queueMessage(cmd + "\n");
+                        // }
                     }
                 } else if (bytes_read == 0) {
                     std::cout << "Client has been disconnected !" << std::endl;
@@ -173,6 +172,7 @@ void Server::runPoll() {
             } if (_poll_fds[i].revents & POLLOUT) {
                 if (curr->hasData()) {
                     const std::string& data_to_send = curr->getSendBuf();
+                    std::cout << "SEND " << curr->getClientFd() << ": " << data_to_send << std::endl;
                     ssize_t bytes = send(_poll_fds[i].fd, data_to_send.data(), data_to_send.size(), 0);
                     if (bytes > 0) {
                         curr->helpSenderEvent(bytes);
@@ -221,4 +221,18 @@ bool Server::addChannel(const std::string& name) {
     _channels.insert(newChannel);
     std::cout << GREEN << "Channel " << name << " created succesfully" << RESET << std::endl;
     return true;
+}
+
+const std::string& Server::getPass() {
+    return _pass;
+}
+
+void Server::removeChannel(const std::string& channelName) {
+    for (std::set<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        if ((*it)->getName() == channelName) {
+            delete *it;
+            _channels.erase(it);
+            break;
+        }
+    }
 }

@@ -45,11 +45,13 @@ public:
     void runPoll();
     void handleNewConect();
     Channel* getChannel(const std::string& name);
+    void removeChannel(const std::string& channelName);
     bool addChannel(const std::string& channel);
     // void _handleClientMessage(Client* client, const std::string& cmd);
     Client* getClientByNick(const std::string& nickname);
     Client* findSecondClient(int sock_src);
     void requestPollOut(int client_fd, bool enable);
+    const std::string& getPass();
     Server();
     ~Server();
 };

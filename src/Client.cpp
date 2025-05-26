@@ -2,7 +2,7 @@
 #include "../inc/Channel.hpp"
 #include "../inc/Server.hpp"
 
-Client::Client(int client_fd, const std::string& hostname, Server* server) : _serv_ref(server), _client_fd(client_fd), _hostname(hostname), _authorized(false), _ack_msg(false) {
+Client::Client(int client_fd, const std::string& hostname, Server* server) : _serv_ref(server), _client_fd(client_fd), _hostname(hostname), _authorized(false), _nickFlag(false), _userFlag(false) {
     std::cout << "new client connection " << _client_fd << std::endl;
 }
 
@@ -34,6 +34,14 @@ bool Client::getAuth(void) const {
     return _authorized;
 }
 
+bool Client::getNickFlag(void) const {
+    return _nickFlag;
+}
+
+bool Client::getUserFlag(void) const {
+    return _userFlag;
+}
+
 void Client::setNickname(const std::string& nickname) {
     _nickname = nickname;
 }
@@ -48,6 +56,14 @@ void Client::setRealname(const std::string& realname) {
 
 void Client::setAuth(bool authorized) {
     _authorized = authorized;
+}
+
+void Client::setNickFlag(bool flag) {
+    _nickFlag = flag;
+}
+
+void Client::setUserFlag(bool flag) {
+    _userFlag = flag;
 }
 
 void Client::appendRecvData(const std::string& buf) {
@@ -65,10 +81,10 @@ void Client::appendRecvData(const std::string& buf) {
 // }
 
 std::string Client::extractLineFromRecv() {
-    size_t end = _recv_buffer.find("\n");
+    size_t end = _recv_buffer.find("\r\n");
     if (end != std::string::npos) {
         std::string res = _recv_buffer.substr(0, end);
-        _recv_buffer.erase(0, end + 1);
+        _recv_buffer.erase(0, end + 2);
         return res;
     }
     return "";
@@ -110,6 +126,13 @@ void Client::helpSenderEvent(size_t len) {
     if (_send_buffer.empty()) {
         _serv_ref->requestPollOut(_client_fd, false);
     }
+}
+
+bool Client::checkRegistered(void) {
+    if (_authorized && _nickFlag && _userFlag) {
+        return true;
+    }
+    return false;
 }
 
 Client::~Client(){}
