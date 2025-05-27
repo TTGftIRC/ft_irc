@@ -76,7 +76,8 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             break;
         }
         case TOPIC: {
-            //handle TOPIC
+            // TopicCommand topicCommand;
+            // topicCommand.execute(server, parsed);
             break;
         }
         case MODE: {
@@ -516,3 +517,33 @@ void KickCommand::kickFromChannel(Server& server, Client* sender,
     // now remove the target from channel
     channel->removeClient(targetNick);
 }
+
+// void TopicCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+//     Client* sender = _parsedCmd.srcClient;
+//     if (_parsedCmd.args.size() < 1) {
+//         //IRC 461: ERR_NEEDMOREPARAMS
+//         std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " TOPIC :Not enough parameters\r\n";
+//         sender->queueMessage(errorMessage);
+//         return;
+//     }
+
+//     std::string channelName = _parsedCmd.args[0];
+//     Channel* channel = server.getChannel(channelName);
+//     if (!channel) {
+//         //IRC 403:ERR_NOSUCHCHANNEL 
+//         std::string errorMessage = ":ircserver 403 " + sender->getNickname() + " " + channelName + " :No such channel\r\n";
+//         sender->queueMessage(errorMessage);
+//         return;
+//     }
+//     if (!channel->hasClient(sender->getNickname())) {
+//         //IRC 442
+//         std::string errorMessage = ":ircserver 442 " + sender->getNickname() + " " + channelName + " You're not on that channel\r\n";
+//         sender->queueMessage(errorMessage);
+//         return;
+//     }
+//     if (_parsedCmd.args.size() == 1) {
+//         if (!channel->getTopic().empty()) {
+
+//         }
+//     }
+// }
