@@ -546,7 +546,7 @@ void TopicCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     }
     if (!channel->hasClient(sender->getNickname())) {
         //IRC 442
-        std::string errorMessage = ":ircserver 442 " + sender->getNickname() + " " + channelName + " You're not on that channel\r\n";
+        std::string errorMessage = ":ircserver 442 " + sender->getNickname() + " " + channelName + " :You're not on that channel\r\n";
         sender->queueMessage(errorMessage);
         return;
     }
@@ -557,14 +557,14 @@ void TopicCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
             return;
         }
         else {
-            std::string message = ":ircserver 331 " + sender->getNickname() + " " + channel->getName() + " : No topic is set\r\n";
+            std::string message = ":ircserver 331 " + sender->getNickname() + " " + channel->getName() + " :No topic is set\r\n";
             sender->queueMessage(message);
             return;
         }
 
     }
     std::string newTopic = _parsedCmd.args[1];
-    if (newTopic[0] == ':') {
+    if (!newTopic.empty() && newTopic[0] == ':') {
         newTopic = newTopic.substr(1);
     }
     if (channel->isTopicLocked() && !channel->isOperator(sender->getNickname())) {
@@ -575,5 +575,9 @@ void TopicCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     }
     channel->setTopic(newTopic, sender->getNickname());//can also be empty , which just erases the previous topic; for now setTopic sends a confirmation to server
     std::string broadcastMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" + sender->getHostname() + " TOPIC " + channel->getName() + " :" + newTopic + "\r\n";
-    channel->broadcast(broadcastMsg); //check if the sender needs also to recieve this
+    channel->broadcast(broadcastMsg);
+
+
+void JoinCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    
 }
