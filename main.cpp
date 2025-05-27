@@ -17,6 +17,7 @@ int main(int ac, char **av) {
         std::cerr << "Error: invalid amount of arguments: try ./irc PORT PASSWORD" << std::endl;
         return 1;
     }
+    pass = av[2];
     port = std::atoi(av[1]);
     if (!isNum(av[1])) {
         std::cerr << "Error: Invalid port" << std::endl;

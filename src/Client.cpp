@@ -108,9 +108,6 @@ bool Client::hasData() const {
 }
 
 void Client::queueMessage(const std::string& msg) {
-    if (msg.find("\n")) {
-        std::cout << "there is new line only alegedly" << std::endl;
-    }
     _send_buffer += msg;
 
     //This is callback for the server to add the event POLLOUT
