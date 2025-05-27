@@ -83,8 +83,8 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             break;
         }
         case TOPIC: {
-            // TopicCommand topicCommand;
-            // topicCommand.execute(server, parsed);
+            TopicCommand topicCommand;
+            topicCommand.execute(server, parsed);
             break;
         }
         case MODE: {
@@ -527,32 +527,53 @@ void KickCommand::kickFromChannel(Server& server, Client* sender,
     channel->removeClient(targetNick);
 }
 
-// void TopicCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
-//     Client* sender = _parsedCmd.srcClient;
-//     if (_parsedCmd.args.size() < 1) {
-//         //IRC 461: ERR_NEEDMOREPARAMS
-//         std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " TOPIC :Not enough parameters\r\n";
-//         sender->queueMessage(errorMessage);
-//         return;
-//     }
+void TopicCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    Client* sender = _parsedCmd.srcClient;
+    if (_parsedCmd.args.size() < 1) {
+        //IRC 461: ERR_NEEDMOREPARAMS
+        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " TOPIC :Not enough parameters\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
 
-//     std::string channelName = _parsedCmd.args[0];
-//     Channel* channel = server.getChannel(channelName);
-//     if (!channel) {
-//         //IRC 403:ERR_NOSUCHCHANNEL 
-//         std::string errorMessage = ":ircserver 403 " + sender->getNickname() + " " + channelName + " :No such channel\r\n";
-//         sender->queueMessage(errorMessage);
-//         return;
-//     }
-//     if (!channel->hasClient(sender->getNickname())) {
-//         //IRC 442
-//         std::string errorMessage = ":ircserver 442 " + sender->getNickname() + " " + channelName + " You're not on that channel\r\n";
-//         sender->queueMessage(errorMessage);
-//         return;
-//     }
-//     if (_parsedCmd.args.size() == 1) {
-//         if (!channel->getTopic().empty()) {
+    std::string channelName = _parsedCmd.args[0];
+    Channel* channel = server.getChannel(channelName);
+    if (!channel) {
+        //IRC 403:ERR_NOSUCHCHANNEL 
+        std::string errorMessage = ":ircserver 403 " + sender->getNickname() + " " + channelName + " :No such channel\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    if (!channel->hasClient(sender->getNickname())) {
+        //IRC 442
+        std::string errorMessage = ":ircserver 442 " + sender->getNickname() + " " + channelName + " You're not on that channel\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    if (_parsedCmd.args.size() == 1) { // if the user calls just TOPIC #channel 
+        if (!channel->getTopic().empty()) { // if the topic on said channel is not empty
+            std::string message = ":ircserver 332 " + sender->getNickname() + " " + channel->getName() + " :" + channel->getTopic() + "\r\n";
+            sender->queueMessage(message);
+            return;
+        }
+        else {
+            std::string message = ":ircserver 331 " + sender->getNickname() + " " + channel->getName() + " : No topic is set\r\n";
+            sender->queueMessage(message);
+            return;
+        }
 
-//         }
-//     }
-// }
+    }
+    std::string newTopic = _parsedCmd.args[1];
+    if (newTopic[0] == ':') {
+        newTopic = newTopic.substr(1);
+    }
+    if (channel->isTopicLocked() && !channel->isOperator(sender->getNickname())) {
+        //IRC 482 ERR_CHANOPRIVSNEEDED
+        std::string errorMessage = ":ircserver 482 " + sender->getNickname() +  " " + channel->getName() + " :You're not channel operator\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    channel->setTopic(newTopic, sender->getNickname());//can also be empty , which just erases the previous topic; for now setTopic sends a confirmation to server
+    std::string broadcastMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" + sender->getHostname() + " TOPIC " + channel->getName() + " :" + newTopic + "\r\n";
+    channel->broadcast(broadcastMsg); //check if the sender needs also to recieve this
+}
