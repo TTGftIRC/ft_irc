@@ -149,10 +149,7 @@ void Server::runPoll() {
                     curr->appendRecvData(buffer);
                     std::string cmd;
                     while (!(cmd = curr->extractLineFromRecv()).empty()) {
-                        //IMPORTANT
-                        //here is parsing and queing message
-                        //I will do msg to the diferent client for testing
-                        std::cout << "RECV " << curr->getClientFd() << ": " << cmd << std::endl;
+                        // std::cout << "RECV " << curr->getClientFd() << ": " << cmd << std::endl;
                         _handleClientMessage(*this, curr, cmd);
                         // Client* target = findSecondClient(curr->getClientFd());
                         // if (target) {
@@ -172,7 +169,6 @@ void Server::runPoll() {
             } if (_poll_fds[i].revents & POLLOUT) {
                 if (curr->hasData()) {
                     const std::string& data_to_send = curr->getSendBuf();
-                    std::cout << "SEND " << curr->getClientFd() << ": " << data_to_send << std::endl;
                     ssize_t bytes = send(_poll_fds[i].fd, data_to_send.data(), data_to_send.size(), 0);
                     if (bytes > 0) {
                         curr->helpSenderEvent(bytes);
