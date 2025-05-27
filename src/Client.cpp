@@ -67,7 +67,19 @@ void Client::setUserFlag(bool flag) {
 }
 
 void Client::appendRecvData(const std::string& buf) {
-    _recv_buffer += buf;
+    size_t len = buf.length();
+
+    if (len >= 2 && buf[len - 2] == '\r' && buf[len - 1] == '\n') {
+        _recv_buffer += buf;
+        return;
+    } else if (len >= 1 && buf[len - 1] == '\n') {
+        std::string tmp = buf;
+        tmp[len - 1] = '\r';
+        tmp += '\n';
+        _recv_buffer += tmp;
+        return;
+    }
+    _recv_buffer += buf + "\r\n";
 }
 
 //This function is for poll main loop POLLIN mostly for execution of cmds
@@ -96,7 +108,9 @@ bool Client::hasData() const {
 }
 
 void Client::queueMessage(const std::string& msg) {
-    //I am not going to do her checker for \r\n for now
+    if (msg.find("\n")) {
+        std::cout << "there is new line only alegedly" << std::endl;
+    }
     _send_buffer += msg;
 
     //This is callback for the server to add the event POLLOUT

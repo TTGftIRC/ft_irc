@@ -143,6 +143,7 @@ void Server::runPoll() {
                 --i;
                 continue;
             } if (_poll_fds[i].revents & POLLIN) {
+                std::cout << "I am in POLL IN" << std::endl;
                 char buffer[1024] = {0};
                 size_t bytes_read = recv(_poll_fds[i].fd, buffer, sizeof(buffer), 0);
                 if (bytes_read > 0) {
@@ -170,6 +171,7 @@ void Server::runPoll() {
                     std::cerr << "Error: receiving data" << std::endl;
                 }
             } if (_poll_fds[i].revents & POLLOUT) {
+                std::cout << "I am in POLLOUT" << std::endl;
                 if (curr->hasData()) {
                     const std::string& data_to_send = curr->getSendBuf();
                     std::cout << "SEND " << curr->getClientFd() << ": " << data_to_send << std::endl;
