@@ -4,7 +4,14 @@
 ICommand::~ICommand() {}
 
 parsedCmd parseInput(const std::string& input, Client* client) {
-    std::istringstream iss(input);
+    size_t len = input.length();
+    std::string trimmed;
+    if (len >= 2 && input[len - 2] == '\r' && input[len - 1] == '\n') {
+        trimmed = input.substr(0, len - 2);
+    } else {
+        trimmed = input;
+    }
+    std::istringstream iss(trimmed);
     parsedCmd result; //empty struct
     result.srcClient = client; // assigned the source client so the command knows who sent it
 
@@ -187,10 +194,12 @@ void UserCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     std::string clientName = (_parsedCmd.srcClient->getNickFlag()) ? _parsedCmd.srcClient->getNickname() : "*";
     if (_parsedCmd.srcClient->checkRegistered()) {
         _parsedCmd.srcClient->queueMessage(ERR_ALREADYREGISTERED(clientName));
+        return;
     }
 
-    if (_parsedCmd.args.size() < 4 || _parsedCmd.args[4][0] != ':') {
+    if (_parsedCmd.args.size() < 4 || _parsedCmd.args[3][0] != ':') {
         _parsedCmd.srcClient->queueMessage(ERR_NEEDMOREPARAMS(clientName, _parsedCmd.cmd));
+        return;
     }
 
     std::string username = _parsedCmd.args[0];
