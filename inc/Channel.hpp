@@ -36,29 +36,30 @@ public:
     // getters
     const std::string &getName() const;
     const std::string &getTopic() const;
-
+    
     // Topic control
     void setTopic(const std::string &topic, const std::string &setter);
     bool isTopicLocked() const;
-
+    
     // Client control
-    bool addClient(Client *client, const std::string &password);
+    void addClient(Client *client);
     void removeClient(const std::string &nickname);
     bool hasClient(const std::string &nickname) const;
-
+    
     // Operators control
-    bool addOperator(const std::string &nickname);
+    void addOperator(const std::string &nickname);
     bool removeOperator(const std::string &nickname);
     bool isOperator(const std::string &nickname) const;
-
+    
     // Invite system
     void invite(const std::string &nickname);
     bool isInvited(const std::string &nickname) const;
-
+    bool isInviteOnly() const;
+    
     // Modes
     void setPassword(const std::string &password);
     void removePassword();
-    void setUserLimit(int limit);
+    void setUserLimit(size_t limit);
     void SetInviteOnly(bool on);
     void SetTopicLock(bool on);
 
@@ -71,4 +72,7 @@ public:
     size_t getClientCount() const;
     size_t getOperatorCount() const;
     Client* getFirstClient() const;
+    bool isFull() const;
+    bool hasPassword() const;
+    bool verifyPassword(const std::string& password) const;
 };

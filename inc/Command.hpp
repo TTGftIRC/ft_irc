@@ -116,3 +116,8 @@ class ModeCommand : public ICommand {
     public:
         void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
+
+
+std::vector<std::string> splitByComma(const std::string& arg);
+
+bool isValidChannelName(const std::string& name);
