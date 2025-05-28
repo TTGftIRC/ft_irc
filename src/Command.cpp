@@ -413,11 +413,12 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
             sender->queueMessage(errorMessage);
             continue;
         }
+        channel->removeClient(sender->getNickname());
         if (channel->getClientCount() > 0 && channel->getOperatorCount() == 0) {
             Client* newOP = channel->getFirstClient();
                 if (newOP) {
                     channel->addOperator(newOP->getNickname());
-                    channel->broadcast(newOP->getNickname() + " has become an opperator\r\n");
+                    channel->broadcast("\n" + newOP->getNickname() + " has become an opperator\r\n");
                     //!!! will change this message , but for now i care about functionality
                     //!!! maybe need to make the message look like a MODE +o message
                     //std::string modeMsg = ":ircserver MODE " + channelName + " +o " + newOP->getNickname() + "\r\n";
@@ -516,7 +517,7 @@ void KickCommand::kickFromChannel(Server& server, Client* sender,
     // now remove the target from channel
     channel->removeClient(targetNick);
 }
-
+//TOPIC
 void TopicCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     Client* sender = _parsedCmd.srcClient;
     if (_parsedCmd.args.size() < 1) {
@@ -568,7 +569,7 @@ void TopicCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     channel->broadcast(broadcastMsg);
 }
 
-
+//JOIN
 void JoinCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     Client* sender = _parsedCmd.srcClient;
     
@@ -625,7 +626,6 @@ void JoinCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
         //broadcast JOIN
         std::string joinMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" + sender->getHostname() + " JOIN " + channelName + "\r\n";
         channel->broadcast(joinMsg);
-        sender->queueMessage("you in");
         //send topic
          if (!channel->getTopic().empty()) {
             std::string topicMsg = ":ircserver 332 " + sender->getNickname() + " " + channelName + " :" + channel->getTopic() + "\r\n";

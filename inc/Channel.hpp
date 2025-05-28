@@ -75,4 +75,5 @@ public:
     bool isFull() const;
     bool hasPassword() const;
     bool verifyPassword(const std::string& password) const;
+    // void getNameList() const;
 };
