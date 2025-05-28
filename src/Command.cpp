@@ -125,6 +125,9 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             break;
         }
         case UNKNOWN: {
+            if (parsed.cmd == "CAP") {
+                parsed.srcClient->queueMessage("CAP * LS :\r\n");
+            }
             break;
         }
         default: {
@@ -254,7 +257,9 @@ void UserCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     _parsedCmd.srcClient->setRealname(realname);
     _parsedCmd.srcClient->setUserFlag(true);
 
-    _parsedCmd.srcClient->queueMessage(RPL_WELCOME(_parsedCmd.srcClient->getNickname()));
+    if (_parsedCmd.srcClient->checkRegistered()) {
+        _parsedCmd.srcClient->queueMessage(RPL_WELCOME(_parsedCmd.srcClient->getNickname()));
+    }
 }
 
 //PRIVMSG
