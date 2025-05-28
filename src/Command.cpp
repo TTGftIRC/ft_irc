@@ -53,7 +53,7 @@ std::vector<std::string> splitByComma(const std::string& arg) {
 
 bool isValidChannelName(const std::string& name) {
     char prefix = name[0];
-    if (prefix != '#' || prefix != '!' || prefix != '+' || prefix != '@') {
+    if (prefix != '#' && prefix != '!' && prefix != '+' && prefix != '@') {
         return false;
     }
     for (size_t i = 0; i < name.length(); ++i) {
@@ -88,7 +88,8 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             break;
         }
         case JOIN: {
-            //handle JOIN
+            JoinCommand joinCommand;
+            joinCommand.execute(server, parsed);
             break;
         }
         case PART: {
@@ -585,7 +586,6 @@ void JoinCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     for (size_t i = 0; i < channels.size(); ++i) {
         std::string channelName = channels[i];
         std::string key = (i < keys.size()) ? keys[i] : "";
-
         //validate channel name;
         if (!isValidChannelName(channelName)) {
             std::string errorMessage = ":ircserver 476 " + sender->getNickname() + " " + channelName + " :Bad Channel Mask\r\n";
@@ -625,6 +625,7 @@ void JoinCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
         //broadcast JOIN
         std::string joinMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" + sender->getHostname() + " JOIN " + channelName + "\r\n";
         channel->broadcast(joinMsg);
+        sender->queueMessage("you in");
         //send topic
          if (!channel->getTopic().empty()) {
             std::string topicMsg = ":ircserver 332 " + sender->getNickname() + " " + channelName + " :" + channel->getTopic() + "\r\n";
