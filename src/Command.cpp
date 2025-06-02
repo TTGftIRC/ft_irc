@@ -103,7 +103,8 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             break;
         }
         case QUIT: {
-            //handle QUIT
+            QuitCommand quitCommand;
+            quitCommand.execute(server, parsed);
             break;
         }
         case KICK: {
@@ -697,6 +698,45 @@ void InviteCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
                                 + sender->getHostname() + " INVITE " + targetNick + " :" 
                                 + channelName + "\r\n";
     target->queueMessage(inviteMsg);
+}
+
+//QUIT
+void QuitCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    //NO NUMERIC ERROR MESSAGES FOR QUIT, AS QUIT ALWAYS PROCEEDS
+    Client* sender = _parsedCmd.srcClient;
+    std::string reason;
+    if (_parsedCmd.args.size() > 0) {
+        reason = _parsedCmd.args[0];
+        if (!reason.empty() && reason[0] == ':') {
+            reason = reason.substr(1);
+        }
+    } else {
+        reason = "Client exited";
+    }
+    std::string quitMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" + sender->getHostname()
+                            + " :QUIT " + reason + "\r\n";
+    //find all channels in which the client is a user
+    std::set<Channel*> channels = server.getChannels();
+    for (std::set<Channel*>::const_iterator ch = channels.begin(); ch != channels.end(); ++ch) {
+        Channel* channel = *ch;
+        if (channel->hasClient(sender->getNickname())) {
+            channel->broadcast(quitMsg, sender->getNickname());
+            channel->removeClient(sender->getNickname());
+            //same as in part, promote new op if needed
+            if (channel->getClientCount() > 0 && channel->getOperatorCount() == 0) {
+                Client* newOP = channel->getFirstClient();
+                if (newOP) {
+                    channel->addOperator(newOP->getNickname());
+                    channel->broadcast("\n" + newOP->getNickname() + " has become an opperator\r\n");
+                }
+            }
+            //same as in part, if the client leaves behind an empty channel, we delete the channel
+            if (channel->getClientCount() == 0) {
+                server.removeChannel(channel->getName());
+            }
+        }
+    }
+    //HERE PLEASE HANDLE THE CLIENT REMOVAL FROM SERVER, CLOSE SOCKET , ETC.
 }
 
 //PING

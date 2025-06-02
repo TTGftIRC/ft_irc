@@ -244,3 +244,5 @@ void Server::removeChannel(const std::string& channelName) {
         }
     }
 }
+
+std::set<Channel*> Server::getChannels() const { return _channels; }
