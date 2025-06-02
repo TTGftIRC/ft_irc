@@ -112,7 +112,8 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             break;
         }
         case INVITE: {
-            //handle INVITE
+            InviteCommand inviteCommand;
+            inviteCommand.execute(server, parsed);
             break;
         }
         case TOPIC: {
@@ -128,7 +129,7 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             break;
         }
         default: {
-            //client->queueMessage("421 " + client->getNickname() + " " + parsed.cmd + " :Unknown command\r\n");
+            //client->queueMessage(":ircserver 421 " + client->getNickname() + " " + parsed.cmd + " :Unknown command\r\n");
             break;
         }
     }
@@ -641,4 +642,53 @@ void JoinCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
         std::string endMsg = ":ircserver 366 " + sender->getNickname() + " " + channelName + " :End of /NAMES list.\r\n";
         sender->queueMessage(endMsg);
     }
+}
+
+//INVITE
+
+void InviteCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    Client* sender = _parsedCmd.srcClient;
+    if (_parsedCmd.args.size() < 2) {
+        //461 ERR_NEEDMOREPARAMS
+        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " INVITE :Not enough parameters\r\n";
+        sender->queueMessage(errorMessage);
+    }
+    std::string targetNick = _parsedCmd.args[0];
+    std::string channelName = _parsedCmd.args[1];
+    Channel* channel = server.getChannel(channelName);
+    if (!channel) {
+        //403 ERR_NOSUCHCHANNEL
+        std::string errorMessage = ":ircserver 403 " + sender->getNickname() + " " + channelName + " :No such channel\r\n";
+        sender->queueMessage(errorMessage);
+    }
+    if (!channel->hasClient(sender->getNickname())) {
+        //442 ERR_NOTONCHANNEL
+        std::string errorMessage = ":ircserver 442 " + sender->getNickname() + " " + channelName + " :You're not on that channel\r\n";
+        sender->queueMessage(errorMessage);
+    }
+    Client* target = server.getClientByNick(targetNick);
+    if (!target) {
+        //401 ERR_NOSUCHNICK
+        std::string errorMessage = ":ircserver 401 " + sender->getNickname() + " " + targetNick + " :No such nick/channel\r\n";
+        sender->queueMessage(errorMessage);
+    }
+    if (channel->hasClient(targetNick)) {
+        //443 ERR_USERONCHANNEL
+        std::string errorMessage = ":ircserver 443 " + sender->getNickname() + " " + targetNick + " " + channelName + " :is already on channel\r\n";
+        sender->queueMessage(errorMessage);
+    }
+    if (channel->isInviteOnly() && !channel->isOperator(sender->getNickname())) {
+        //482 ERR_CHANOPRIVSNEEDED
+        std::string errorMessage = ":ircserver 482 " + sender->getNickname() + " " + channelName + " :You're not channel operator\r\n";
+        sender->queueMessage(errorMessage);
+    }
+    channel->invite(targetNick);
+    // 341 RPL_INVITING
+    std::string reply = ":ircservere 341 " + sender->getNickname() + " " + targetNick + " " + channelName + "\r\n";
+    sender->queueMessage(reply);
+    // Send invite to target
+    std::string inviteMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" 
+                                + sender->getHostname() + " INVITE " + targetNick + " :" 
+                                + channelName + "\r\n";
+    target->queueMessage(inviteMsg);
 }
