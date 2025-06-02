@@ -126,6 +126,11 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             //handle MODE
             break;
         }
+        case PING: {
+            PingCommand pingCommand;
+            pingCommand.execute(server, parsed);
+            break;
+        }
         case UNKNOWN: {
             break;
         }
@@ -148,6 +153,7 @@ cmds getCommandEnum(const std::string& cmd) {
     if (cmd == "INVITE") return INVITE;
     if (cmd == "TOPIC") return TOPIC;
     if (cmd == "MODE") return MODE;
+    if (cmd == "PING") return PING;
     return UNKNOWN;
 }
 
@@ -731,4 +737,21 @@ void QuitCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
         }
     }
     //HERE PLEASE HANDLE THE CLIENT REMOVAL FROM SERVER, CLOSE SOCKET , ETC.
+}
+
+//PING
+
+void PingCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    (void)server;
+    if (_parsedCmd.args.empty()) {
+        _parsedCmd.srcClient->queueMessage(ERR_NOORIGIN(_parsedCmd.srcClient->getNickname()));
+        return;
+    } else if (_parsedCmd.args[0][0] != ':') {
+        _parsedCmd.srcClient->queueMessage(ERR_NEEDMOREPARAMS(_parsedCmd.srcClient->getNickname(), _parsedCmd.cmd));
+        return;
+    }
+
+    std::string token = _parsedCmd.args[0];
+    token = token.substr(1);
+    _parsedCmd.srcClient->queueMessage("PONG :" + token + "\r\n");
 }
