@@ -35,10 +35,42 @@ parsedCmd parseInput(const std::string& input, Client* client) {
 // result.args = {"#general", ":hello there"}
 // result.srcClient = pointer to sender
 
+std::vector<std::string> splitByComma(const std::string& arg) {
+    std::vector<std::string> result;
+    std::string current;
+    for (size_t i = 0; i < arg.length(); ++i) {
+        char c = arg[i];
+        if (c == ',') {
+            result.push_back(current);
+            current.clear();
+        } else {
+            current += c;
+        }
+    }
+    result.push_back(current);
+    return result;
+}
+
+bool isValidChannelName(const std::string& name) {
+    char prefix = name[0];
+    if (prefix != '#' && prefix != '!' && prefix != '+' && prefix != '@') {
+        return false;
+    }
+    for (size_t i = 0; i < name.length(); ++i) {
+        char c = name[i];
+        if (c == ',' || c == ' ' || c == ':' || c == '\a') { // channels must not have those elements in the name
+            return false;
+        }
+    }
+    if (name.length() > 50 ) { //TBD i don't know exactly a clear length limit
+        return false;
+    }
+    return true;
+}
+
 void _handleClientMessage(Server& server, Client* client, const std::string& cmd) {
     parsedCmd parsed = parseInput(cmd, client);
     cmds CommnadEnum = getCommandEnum(parsed.cmd);
-    // (void)server;
     switch (CommnadEnum) {
         case PASS: {
             PassCommand passCommand;
@@ -56,7 +88,8 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             break;
         }
         case JOIN: {
-            //handle JOIN
+            JoinCommand joinCommand;
+            joinCommand.execute(server, parsed);
             break;
         }
         case PART: {
@@ -79,7 +112,8 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             break;
         }
         case INVITE: {
-            //handle INVITE
+            InviteCommand inviteCommand;
+            inviteCommand.execute(server, parsed);
             break;
         }
         case TOPIC: {
@@ -91,11 +125,16 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             //handle MODE
             break;
         }
+        case PING: {
+            PingCommand pingCommand;
+            pingCommand.execute(server, parsed);
+            break;
+        }
         case UNKNOWN: {
             break;
         }
         default: {
-            //client->queueMessage("421 " + client->getNickname() + " " + parsed.cmd + " :Unknown command\r\n");
+            //client->queueMessage(":ircserver 421 " + client->getNickname() + " " + parsed.cmd + " :Unknown command\r\n");
             break;
         }
     }
@@ -113,6 +152,7 @@ cmds getCommandEnum(const std::string& cmd) {
     if (cmd == "INVITE") return INVITE;
     if (cmd == "TOPIC") return TOPIC;
     if (cmd == "MODE") return MODE;
+    if (cmd == "PING") return PING;
     return UNKNOWN;
 }
 
@@ -349,23 +389,7 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
         return;
     }
     //split channels by comma
-    std::string channelsString = _parsedCmd.args[0];
-    std::vector<std::string> channels;
-    std::string current;
-    for (size_t i = 0; i < channelsString.length(); ++i) {
-        char c = channelsString[i];
-        if (c == ',') {
-            if (!current.empty()) {
-                channels.push_back(current);
-                current.clear();
-            }
-        } else {
-            current += c;
-        }
-    }
-    if (!current.empty()) {
-        channels.push_back(current);
-    }
+    std::vector<std::string> channels = splitByComma(_parsedCmd.args[0]);
 
     // if there is a message like PART #general :Goodbye!
     // that means we will have two args in the _parsedCmd args vector, and we take args[1] as the "reason"
@@ -380,6 +404,9 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     }
     for (size_t i = 0; i < channels.size(); ++i) {
         const std::string& channelName = channels[i];
+        if (channelName.empty()) {
+            continue;
+        }
         Channel* channel = server.getChannel(channelName);
         if (channel == NULL) {
             //IRC 403: ERR_NOSUCHCHANNEL
@@ -393,10 +420,12 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
             sender->queueMessage(errorMessage);
             continue;
         }
+        channel->removeClient(sender->getNickname());
         if (channel->getClientCount() > 0 && channel->getOperatorCount() == 0) {
             Client* newOP = channel->getFirstClient();
-                if (newOP && channel->addOperator(newOP->getNickname())) {
-                    channel->broadcast(newOP->getNickname() + " has become an opperator\r\n");
+                if (newOP) {
+                    channel->addOperator(newOP->getNickname());
+                    channel->broadcast("\n" + newOP->getNickname() + " has become an opperator\r\n");
                     //!!! will change this message , but for now i care about functionality
                     //!!! maybe need to make the message look like a MODE +o message
                     //std::string modeMsg = ":ircserver MODE " + channelName + " +o " + newOP->getNickname() + "\r\n";
@@ -422,42 +451,8 @@ void KickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
         return;
     }
     //sepparate the channels and the users by ','
-    std::string channelsString = _parsedCmd.args[0];
-    std::vector<std::string> channels;
-    std::string currentChannel;
-    for (size_t i = 0; i < channelsString.length(); ++i) {
-        char c = channelsString[i];
-        if (c == ',') {
-            if (!currentChannel.empty()) {
-                channels.push_back(currentChannel);
-                currentChannel.clear();
-            }
-        } else {
-            currentChannel += c;
-        }
-    }
-    if (!currentChannel.empty()) {
-        channels.push_back(currentChannel);
-        currentChannel.clear();
-    }
-    std::string usersString = _parsedCmd.args[1];
-    std::vector<std::string> users;
-    std::string currentUser;
-    for (size_t i = 0; i < usersString.length(); ++i) {
-        char u = usersString[i];
-        if (u == ',') {
-            if (!currentUser.empty()) {
-                users.push_back(currentUser);
-                currentUser.clear();
-            }
-        } else {
-            currentUser += u;
-        }
-    }
-    if (!currentUser.empty()) {
-        users.push_back(currentUser);
-        currentUser.clear();
-    }
+    std::vector<std::string> channels = splitByComma(_parsedCmd.args[0]);
+    std::vector<std::string> users = splitByComma(_parsedCmd.args[1]);
 
     //check for reason, if none, or wrongly set(without :) then the reason will be the operator's nickname
     std::string reason = (_parsedCmd.args.size() > 2) ? _parsedCmd.args[2] : sender->getNickname();
@@ -470,14 +465,17 @@ void KickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
 
     if (numChannels == numUsers) {
         for (size_t i = 0; i < numChannels; ++i) {
+            if (channels[i].empty() || users[i].empty()) continue;
             kickFromChannel(server, sender, channels[i], users[i], reason);
         }
     } else if (numChannels == 1) {
         for (size_t i = 0; i < numUsers; ++i) {
+            if (users[i].empty()) continue;
             kickFromChannel(server, sender, channels[0], users[i], reason);
         }
     } else if (numUsers == 1) {
         for(size_t i = 0; i < numChannels; ++i) {
+            if (channels[i].empty()) continue;
             kickFromChannel(server, sender, channels[i], users[0], reason);
         }
     }
@@ -496,7 +494,7 @@ void KickCommand::kickFromChannel(Server& server, Client* sender,
     }
     if (!channel->hasClient(sender->getNickname())) {
         //IRC 442:ERR_NOTONCHANNEL
-        std::string errorMessage = "ircserver 442 " + sender->getNickname() + " " + channelName + " :You're not on that channel\r\n";
+        std::string errorMessage = ":ircserver 442 " + sender->getNickname() + " " + channelName + " :You're not on that channel\r\n";
         sender->queueMessage(errorMessage);
         return;
     }
@@ -526,7 +524,7 @@ void KickCommand::kickFromChannel(Server& server, Client* sender,
     // now remove the target from channel
     channel->removeClient(targetNick);
 }
-
+//TOPIC
 void TopicCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     Client* sender = _parsedCmd.srcClient;
     if (_parsedCmd.args.size() < 1) {
@@ -576,8 +574,144 @@ void TopicCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     channel->setTopic(newTopic, sender->getNickname());//can also be empty , which just erases the previous topic; for now setTopic sends a confirmation to server
     std::string broadcastMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" + sender->getHostname() + " TOPIC " + channel->getName() + " :" + newTopic + "\r\n";
     channel->broadcast(broadcastMsg);
+}
 
-
+//JOIN
 void JoinCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    Client* sender = _parsedCmd.srcClient;
     
+    if (_parsedCmd.args.size() < 1 || _parsedCmd.args[0].empty()) {
+        //IRC 461 ERR_NEEDMOREPARAMS
+        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " JOIN :Not enough parameters\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
+    std::vector<std::string> channels = splitByComma(_parsedCmd.args[0]);
+    std::vector<std::string> keys; 
+    if (_parsedCmd.args.size() > 1) {
+        keys = splitByComma(_parsedCmd.args[1]);
+    }
+    for (size_t i = 0; i < channels.size(); ++i) {
+        std::string channelName = channels[i];
+        std::string key = (i < keys.size()) ? keys[i] : "";
+        //validate channel name;
+        if (!isValidChannelName(channelName)) {
+            std::string errorMessage = ":ircserver 476 " + sender->getNickname() + " " + channelName + " :Bad Channel Mask\r\n";
+            sender->queueMessage(errorMessage);
+            continue;
+        }
+        Channel* channel = server.getOrCreateChannel(channelName);
+        //if sender already in channel, continue to next channel(if any left)
+        if (channel->hasClient(sender->getNickname())) {
+            continue;
+        }
+        //invite only, sender not invited
+        if (channel->isInviteOnly() && !channel->isInvited(sender->getNickname())) {
+            //irc 473
+            std::string errorMessage = ":ircserver 473 " + sender->getNickname() + " " + channelName + " :Cannot join channel (+i)\r\n";
+            sender->queueMessage(errorMessage);
+            continue;
+        }
+        //full
+        if (channel->isFull()) {
+            std::string errorMessage = ":ircserver 471 " + sender->getNickname() + " " + channelName + " :Cannot join channel (+l)\r\n";
+            sender->queueMessage(errorMessage);
+            continue;
+        }
+        //key/password protected
+        if (channel->hasPassword() && !channel->verifyPassword(key)) {
+            std::string errorMessage = ":ircserver 475 " + sender->getNickname() + " " + channelName + " :Cannot join channel (+k)\r\n";
+            sender->queueMessage(errorMessage);
+            continue;
+        }
+        //add the sender
+        channel->addClient(sender);
+        //if first user, make operator
+        if (channel->getClientCount() == 1) {
+            channel->addOperator(sender->getNickname());
+        }
+        //broadcast JOIN
+        std::string joinMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" + sender->getHostname() + " JOIN " + channelName + "\r\n";
+        channel->broadcast(joinMsg);
+        //send topic
+         if (!channel->getTopic().empty()) {
+            std::string topicMsg = ":ircserver 332 " + sender->getNickname() + " " + channelName + " :" + channel->getTopic() + "\r\n";
+            sender->queueMessage(topicMsg);
+        } else {
+            std::string notopicMsg = ":ircserver 331 " + sender->getNickname() + " " + channelName + " :No topic is set\r\n";
+            sender->queueMessage(notopicMsg);
+        }
+        //send list of user's names from channel
+        std::string nameList = channel->getNameList();
+        std::string namesMsg = ":ircserver 353 " + sender->getNickname() + " = " + channelName + " :" + nameList + "\r\n";
+        sender->queueMessage(namesMsg);
+        std::string endMsg = ":ircserver 366 " + sender->getNickname() + " " + channelName + " :End of /NAMES list.\r\n";
+        sender->queueMessage(endMsg);
+    }
+}
+
+//INVITE
+
+void InviteCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    Client* sender = _parsedCmd.srcClient;
+    if (_parsedCmd.args.size() < 2) {
+        //461 ERR_NEEDMOREPARAMS
+        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " INVITE :Not enough parameters\r\n";
+        sender->queueMessage(errorMessage);
+    }
+    std::string targetNick = _parsedCmd.args[0];
+    std::string channelName = _parsedCmd.args[1];
+    Channel* channel = server.getChannel(channelName);
+    if (!channel) {
+        //403 ERR_NOSUCHCHANNEL
+        std::string errorMessage = ":ircserver 403 " + sender->getNickname() + " " + channelName + " :No such channel\r\n";
+        sender->queueMessage(errorMessage);
+    }
+    if (!channel->hasClient(sender->getNickname())) {
+        //442 ERR_NOTONCHANNEL
+        std::string errorMessage = ":ircserver 442 " + sender->getNickname() + " " + channelName + " :You're not on that channel\r\n";
+        sender->queueMessage(errorMessage);
+    }
+    Client* target = server.getClientByNick(targetNick);
+    if (!target) {
+        //401 ERR_NOSUCHNICK
+        std::string errorMessage = ":ircserver 401 " + sender->getNickname() + " " + targetNick + " :No such nick/channel\r\n";
+        sender->queueMessage(errorMessage);
+    }
+    if (channel->hasClient(targetNick)) {
+        //443 ERR_USERONCHANNEL
+        std::string errorMessage = ":ircserver 443 " + sender->getNickname() + " " + targetNick + " " + channelName + " :is already on channel\r\n";
+        sender->queueMessage(errorMessage);
+    }
+    if (channel->isInviteOnly() && !channel->isOperator(sender->getNickname())) {
+        //482 ERR_CHANOPRIVSNEEDED
+        std::string errorMessage = ":ircserver 482 " + sender->getNickname() + " " + channelName + " :You're not channel operator\r\n";
+        sender->queueMessage(errorMessage);
+    }
+    channel->invite(targetNick);
+    // 341 RPL_INVITING
+    std::string reply = ":ircservere 341 " + sender->getNickname() + " " + targetNick + " " + channelName + "\r\n";
+    sender->queueMessage(reply);
+    // Send invite to target
+    std::string inviteMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@" 
+                                + sender->getHostname() + " INVITE " + targetNick + " :" 
+                                + channelName + "\r\n";
+    target->queueMessage(inviteMsg);
+}
+
+//PING
+
+void PingCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    (void)server;
+    if (_parsedCmd.args.empty()) {
+        _parsedCmd.srcClient->queueMessage(ERR_NOORIGIN(_parsedCmd.srcClient->getNickname()));
+        return;
+    } else if (_parsedCmd.args[0][0] != ':') {
+        _parsedCmd.srcClient->queueMessage(ERR_NEEDMOREPARAMS(_parsedCmd.srcClient->getNickname(), _parsedCmd.cmd));
+        return;
+    }
+
+    std::string token = _parsedCmd.args[0];
+    token = token.substr(1);
+    _parsedCmd.srcClient->queueMessage("PONG :" + token + "\r\n");
 }

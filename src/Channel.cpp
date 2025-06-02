@@ -20,22 +20,27 @@ const std::string& Channel::getName() const { return this->_name; }
 
 const std::string& Channel::getTopic() const { return this->_topic; }
 
+std::string Channel::getNameList() const {
+    std::string list;
+    for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        Client* client = *it;
+        std::string nick = client->getNickname();
+        if (isOperator(nick)) {
+            list += "@" + nick + " ";
+        } else {
+            list += nick + " ";
+        }
+    }
+    if (!list.empty() && list[list.length() - 1] == ' ') { // remove any trailing spaces, if present
+        list.erase(list.length() - 1, 1);
+    }
+    return list;
+}
 
 void Channel::setTopic(const std::string& topic, const std::string& setter) {
-    (void)setter;
-    // Client* client = _server->getClientByNick(setter);
-    // if (!client)   // check if the client is in the server map
-    //     return;
-    // if (_topicLocked && !isOperator(setter)) {  // check if the topic is locked and if the setter is an operator or not
-    //         client->queueMessage(":ircserver 482 " + setter + " " + " : You're not channel operator");
-    //         return;
-    //     }
     this->_topic = topic;
-    // std::string topicMsg = ":" + setter + " TOPIC " + _name + " :" + topic;
-    // broadcast(topicMsg); //without the second param, even the setter will be notified with this message
-    
     //optional for server console
-    std::cout << GREEN << "Topic for channel " << _name << " changed to: " << topic << RESET << std::endl;
+    std::cout << GREEN << "Topic for channel " << _name << " changed to: " << topic << " by " << setter  << "." << RESET << std::endl;
 
 
 }
@@ -43,36 +48,9 @@ void Channel::setTopic(const std::string& topic, const std::string& setter) {
 bool Channel::isTopicLocked() const { return this->_topicLocked; }
 
 
-bool Channel::addClient(Client* client, const std::string& password) {
-    //check if client already in channel
-    if (hasClient(client->getNickname())) {
-        client->queueMessage("NOTICE " + client->getNickname() + " :You are already in this channel.");
-        return false;
-    }
-    //check if the channel is invite only and if the client is invited
-    if (this->_inviteOnly && !isInvited(client->getNickname())) {
-        client->queueMessage("473 " + client->getNickname() + " " + _name + " :Channel is invite-only.");
-        return false;
-    }
-    //check if there is a user limit and if the limit has been reached
-    if (_userLimit > 0 && getClientCount() >= _userLimit) {
-        client->queueMessage("471 " + client->getNickname() + " " + _name + " :Channel is full.");
-        return false;
-    }
-    //check if channel has password and if the provided password is correct
-    if (!this->_password.empty() && password != this->_password) {
-        client->queueMessage("476 " + client->getNickname() + " " + _name + " :Incorect password.");
-        return false;
-    }
+void Channel::addClient(Client* client) {
     //add the client to the channel
     _clients.push_back(client);
-    client->queueMessage("JOIN " + _name + " :Welcome to the channel.");
-    //broadcast to the other members that a new client joined
-    std::string joinMsg = ":" + client->getNickname() + "!" + client->getUsername() + "@" + client->getHostname() + " JOIN " + _name;
-    broadcast(joinMsg, client->getNickname()); // the broadcast will not reach the client who just joined
-    //send topic to new client
-    client->queueMessage("332 " + client->getNickname() + " " + _name + " :" + _topic);
-    return true;
 }
 
 void Channel::removeClient(const std::string& nickname) {
@@ -104,9 +82,8 @@ bool Channel::hasClient(const std::string& nickname) const {
 }
 
 
-bool Channel::addOperator(const std::string& nickname) {
-    return _operators.insert(nickname).second;
-    //std::set.insert returns a std::pair<iterator, bool>, so the .second tells you if the insertion was succesful
+void Channel::addOperator(const std::string& nickname) {
+    _operators.insert(nickname);
 }
 
 bool Channel::removeOperator(const std::string& nickname) {
@@ -129,12 +106,16 @@ bool Channel::isInvited(const std::string& nickname) const {
     return true;
 }
 
+bool Channel::isInviteOnly() const {
+    return _inviteOnly;
+}
+
 
 void Channel::setPassword(const std::string& password) { _password = password;}
 
 void Channel::removePassword() { _password.clear(); }
 
-void Channel::setUserLimit(int limit) { _userLimit = limit; }
+void Channel::setUserLimit(size_t limit) { _userLimit = limit; }
 
 void Channel::SetInviteOnly(bool on) { _inviteOnly = on; }
 
@@ -155,3 +136,16 @@ size_t Channel::getClientCount() const { return _clients.size(); }
 size_t Channel::getOperatorCount() const { return _operators.size(); }
 
 Client* Channel::getFirstClient() const { return _clients.empty() ? NULL : *_clients.begin(); }
+
+bool Channel::isFull() const { 
+    if (_userLimit == 0) {
+        return false;
+    }
+    return (_clients.size() >= _userLimit); 
+}
+
+bool Channel::hasPassword() const { return _password.empty(); }
+
+bool Channel::verifyPassword(const std::string& password) const {
+    return _password == password;
+}

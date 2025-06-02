@@ -206,6 +206,18 @@ Channel* Server::getChannel(const std::string& name) {
     return NULL;
 }
 
+Channel* Server::getOrCreateChannel(const std::string& name) {
+    for (std::set<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        if ((*it)->getName() == name) {
+            return *it;
+        }
+    }
+    Channel* newChannel = new Channel(name);
+    _channels.insert(newChannel);
+    std::cout << GREEN << "Channel " << name << " created succesfully" << RESET << std::endl;
+    return newChannel;
+}
+
 bool Server::addChannel(const std::string& name) {
     for(std::set<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
         if ((*it)->getName() == name) {
