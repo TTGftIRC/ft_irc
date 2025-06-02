@@ -44,6 +44,7 @@ public:
     void startListen();
     void runPoll();
     void handleNewConect();
+    std::set<Channel*> getChannels() const;
     Channel* getChannel(const std::string& name);
     Channel* getOrCreateChannel(const std::string& name);
     void removeChannel(const std::string& channelName);
