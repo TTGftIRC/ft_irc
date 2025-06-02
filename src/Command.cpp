@@ -634,6 +634,11 @@ void JoinCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
             std::string notopicMsg = ":ircserver 331 " + sender->getNickname() + " " + channelName + " :No topic is set\r\n";
             sender->queueMessage(notopicMsg);
         }
+        //send list of user's names from channel
+        std::string nameList = channel->getNameList();
+        std::string namesMsg = ":ircserver 353 " + sender->getNickname() + " = " + channelName + " :" + nameList + "\r\n";
+        sender->queueMessage(namesMsg);
+        std::string endMsg = ":ircserver 366 " + sender->getNickname() + " " + channelName + " :End of /NAMES list.\r\n";
+        sender->queueMessage(endMsg);
     }
-    //still need to display the list of users from the channel to the sender that joins the new channel
 }

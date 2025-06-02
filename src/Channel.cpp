@@ -20,9 +20,22 @@ const std::string& Channel::getName() const { return this->_name; }
 
 const std::string& Channel::getTopic() const { return this->_topic; }
 
-// void Channel::getNameList() const {
-
-// }
+std::string Channel::getNameList() const {
+    std::string list;
+    for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        Client* client = *it;
+        std::string nick = client->getNickname();
+        if (isOperator(nick)) {
+            list += "@" + nick + " ";
+        } else {
+            list += nick + " ";
+        }
+    }
+    if (!list.empty() && list[list.length() - 1] == ' ') { // remove any trailing spaces, if present
+        list.erase(list.length() - 1, 1);
+    }
+    return list;
+}
 
 void Channel::setTopic(const std::string& topic, const std::string& setter) {
     this->_topic = topic;
