@@ -63,10 +63,6 @@ void Channel::removeClient(const std::string& nickname) {
     }
     _operators.erase(nickname);   // for both sets, if nickname is not there 
     _invited.erase(nickname);
-    
-    //broadcast parting
-    std::string partMsg = ":" + nickname + " PART " + _name;
-    broadcast(partMsg, nickname);
     //msg to server
     std::cout << ORANGE << "Client " << nickname << " removed from channel " << _name << RESET << std::endl;
 }
