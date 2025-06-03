@@ -740,7 +740,7 @@ void QuitCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
             }
         }
     }
-    //HERE PLEASE HANDLE THE CLIENT REMOVAL FROM SERVER, CLOSE SOCKET , ETC.
+    server.disconnectClient(_parsedCmd.srcClient->getClientFd());
 }
 
 //PING

@@ -45,6 +45,24 @@ void Server::requestPollOut(int client_fd, bool enable) {
     }
 }
 
+void Server::disconnectClient(int client_fd) {
+    close(client_fd);
+
+    std::map<int, Client*>::iterator clientIt = _clients.find(client_fd);
+    if (clientIt != _clients.end()) {
+        delete clientIt->second;
+        _clients.erase(clientIt);
+    }
+
+    for (std::vector<pollfd>::iterator it = _poll_fds.begin(); it != _poll_fds.end(); ++it) {
+        if (it->fd == client_fd) {
+            std::cout << "Client has been disconnected !" << std::endl;
+            _poll_fds.erase(it);
+            break;
+        }
+    }
+}
+
 void Server::createSocket()
 {
     _listening_socket = socket(AF_INET, SOCK_STREAM, 0);
