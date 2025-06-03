@@ -422,6 +422,10 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
             continue;
         }
         channel->removeClient(sender->getNickname());
+        //broadcast parting
+        std::string partMsg = ":" + sender->getNickname() + "!" + sender->getUsername() 
+                                + "@" + sender->getHostname() + " PART " + channelName + " :" + reason;
+        channel->broadcast(partMsg, sender->getNickname());
         if (channel->getClientCount() > 0 && channel->getOperatorCount() == 0) {
             Client* newOP = channel->getFirstClient();
                 if (newOP) {
