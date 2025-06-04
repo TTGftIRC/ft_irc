@@ -1,4 +1,5 @@
 #include "inc/Server.hpp"
+#include "inc/Command.hpp"
 
 bool isNum(const char* input) {
     for (size_t i = 0; input[i] != '\0'; i++) {
