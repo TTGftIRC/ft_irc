@@ -127,3 +127,5 @@ class PingCommand : public ICommand {
 std::vector<std::string> splitByComma(const std::string& arg);
 
 bool isValidChannelName(const std::string& name);
+
+bool isNum(const char* input);
