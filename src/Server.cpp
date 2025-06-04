@@ -167,7 +167,7 @@ void Server::runPoll() {
                     curr->appendRecvData(buffer);
                     std::string cmd;
                     while (!(cmd = curr->extractLineFromRecv()).empty()) {
-                        // std::cout << "RECV " << curr->getClientFd() << ": " << cmd << std::endl;
+                        std::cout << "RECV " << curr->getClientFd() << ": " << cmd << std::endl;
                         _handleClientMessage(*this, curr, cmd);
                         // Client* target = findSecondClient(curr->getClientFd());
                         // if (target) {
