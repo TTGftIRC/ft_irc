@@ -82,8 +82,8 @@ void Channel::addOperator(const std::string& nickname) {
     _operators.insert(nickname);
 }
 
-bool Channel::removeOperator(const std::string& nickname) {
-    return _operators.erase(nickname) > 0; // 1 if the operator was succesfully removed, 0 if the nickname wasn't an op in the first place
+void Channel::removeOperator(const std::string& nickname) {
+    _operators.erase(nickname);
 }
 
 bool Channel::isOperator(const std::string& nickname) const {
@@ -113,9 +113,9 @@ void Channel::removePassword() { _password.clear(); }
 
 void Channel::setUserLimit(size_t limit) { _userLimit = limit; }
 
-void Channel::SetInviteOnly(bool on) { _inviteOnly = on; }
+void Channel::setInviteOnly(bool on) { _inviteOnly = on; }
 
-void Channel::SetTopicLock(bool on) { _topicLocked = on; }
+void Channel::setTopicLock(bool on) { _topicLocked = on; }
 
 
 void Channel::broadcast(const std::string& message, const std::string& senderNick) {
@@ -145,3 +145,5 @@ bool Channel::hasPassword() const { return _password.empty(); }
 bool Channel::verifyPassword(const std::string& password) const {
     return _password == password;
 }
+
+size_t Channel::getUserLimit() const { return _userLimit; }

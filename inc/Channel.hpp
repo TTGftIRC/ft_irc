@@ -36,6 +36,7 @@ public:
     // getters
     const std::string &getName() const;
     const std::string &getTopic() const;
+    size_t getUserLimit() const;
     
     // Topic control
     void setTopic(const std::string &topic, const std::string &setter);
@@ -48,7 +49,7 @@ public:
     
     // Operators control
     void addOperator(const std::string &nickname);
-    bool removeOperator(const std::string &nickname);
+    void removeOperator(const std::string &nickname);
     bool isOperator(const std::string &nickname) const;
     
     // Invite system
@@ -60,8 +61,8 @@ public:
     void setPassword(const std::string &password);
     void removePassword();
     void setUserLimit(size_t limit);
-    void SetInviteOnly(bool on);
-    void SetTopicLock(bool on);
+    void setInviteOnly(bool on);
+    void setTopicLock(bool on);
 
     // Messaging
     void broadcast(const std::string &message, const std::string &senderNick = "");
