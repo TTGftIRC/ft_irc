@@ -937,8 +937,13 @@ void ModeCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
                         return; 
                     }
                     std::string number = _parsedCmd.args[index];
-                    // here check for valid number
-                    size_t limit = 10; //this to be the resulting limit
+                    if (!isNum(number.c_str())) {
+                        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " MODE :Not enough parameters\r\n";
+                        sender->queueMessage(errorMessage);
+                    }
+                    std::stringstream ss(number);
+                    size_t limit;
+                    ss >> limit;
                     channel->setUserLimit(limit);
                     std::string replySenderMsg = ":ircserver MODE " + channelName + " " + direction + mode + " " + _parsedCmd.args[index] + "\r\n";
                     sender->queueMessage(replySenderMsg);
