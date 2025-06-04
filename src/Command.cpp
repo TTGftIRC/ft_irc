@@ -773,13 +773,13 @@ void PingCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     if (_parsedCmd.args.empty()) {
         _parsedCmd.srcClient->queueMessage(ERR_NOORIGIN(_parsedCmd.srcClient->getNickname()));
         return;
-    } else if (_parsedCmd.args[0][0] != ':') {
-        _parsedCmd.srcClient->queueMessage(ERR_NEEDMOREPARAMS(_parsedCmd.srcClient->getNickname(), _parsedCmd.cmd));
-        return;
-    }
+    } // else if (_parsedCmd.args[0][0] != ':') {
+    //     _parsedCmd.srcClient->queueMessage(ERR_NEEDMOREPARAMS(_parsedCmd.srcClient->getNickname(), _parsedCmd.cmd));
+    //     return;
+    // }
 
     std::string token = _parsedCmd.args[0];
-    token = token.substr(1);
+    // token = token.substr(1);
     _parsedCmd.srcClient->queueMessage("PONG :" + token + "\r\n");
 }
 
