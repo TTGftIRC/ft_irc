@@ -6,7 +6,7 @@ class Server;
 class Client;
 
 //macros for error codes
-#define RPL_WELCOME(nick) (std::string(":ircserver 001 Welcome to the server, ") + nick + "!\r\n")
+#define RPL_WELCOME(nick, user, host) (std::string(":ircserver 001 ") + nick + " :Welcome to the server, " + nick + "[!" + user + "@" + host + "]\r\n")
 #define ERR_NEEDMOREPARAMS(client, command) (std::string(":ircserver 461 ") + client + " " + command + " :Not enough parameters\r\n")
 #define ERR_ALREADYREGISTERED(client) (std::string(":ircserver 462 ") + client + " :You may not reregister\r\n")
 #define ERR_PASSWDMISMATCH(client) (std::string(":ircserver 464 ") + client + " :Password incorrect\r\n")

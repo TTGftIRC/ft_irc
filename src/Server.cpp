@@ -184,6 +184,7 @@ void Server::runPoll() {
                 } else {
                     std::cerr << "Error: receiving data" << std::endl;
                 }
+                continue;
             } if (_poll_fds[i].revents & POLLOUT) {
                 if (curr->hasData()) {
                     const std::string& data_to_send = curr->getSendBuf();
