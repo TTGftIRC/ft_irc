@@ -29,10 +29,10 @@ parsedCmd parseInput(const std::string& input, Client* client) {
     }
     return result; //return the now filled struct
 }
-// so result from PRIVMSG #general :hello there
+// so result from PRIVMSG #general #channel :hello there
 //                  is
 // result.cmd = "PRIVMSG"
-// result.args = {"#general", ":hello there"}
+// result.args = {"#general", "#channel", ":hello there"}
 // result.srcClient = pointer to sender
 
 std::vector<std::string> splitByComma(const std::string& arg) {
@@ -72,58 +72,59 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
     parsedCmd parsed = parseInput(cmd, client);
     cmds CommnadEnum = getCommandEnum(parsed.cmd);
     switch (CommnadEnum) {
-        case PASS: {
+        case PASS: { // PASS blablabli
             PassCommand passCommand;
             passCommand.execute(server, parsed);
             break;
         }
-        case NICK:{
+        case NICK:{  // NICK tudor
             NickCommand nickCommand;
             nickCommand.execute(server, parsed);
             break;
         }
-        case USER: {
+        case USER: { // USER
             UserCommand userCommand;
             userCommand.execute(server, parsed);
             break;
         }
-        case JOIN: {
+        case JOIN: { // JOIN #general,#strict,#channel  blablabli,lalala
             JoinCommand joinCommand;
             joinCommand.execute(server, parsed);
             break;
         }
-        case PART: {
+        case PART: { // PART #general :reason(optional)
             PartCommand partCommand;
             partCommand.execute(server, parsed);
             break;
         }
-        case PRIVMSG: {
+        case PRIVMSG: { // PRIVMSG tudor,grisha :hello    PRIVMSG #general :hello everybody
             PrivmsgCommand privmsgCommand;
             privmsgCommand.execute(server, parsed);
             break;
         }
-        case QUIT: {
+        case QUIT: { // QUIT :reason(optional)
             QuitCommand quitCommand;
             quitCommand.execute(server, parsed);
             break;
         }
-        case KICK: {
+        case KICK: { // KICK #general,#strict tudor,grisha :just because(optional)
             KickCommand kickCommand;
             kickCommand.execute(server, parsed);
             break;
         }
-        case INVITE: {
+        case INVITE: { // INVITE grisha #general
             InviteCommand inviteCommand;
             inviteCommand.execute(server, parsed);
             break;
         }
-        case TOPIC: {
+        case TOPIC: { // TOPIC #general -- you get the topic   TOPIC #general :cats -- you set the topic ( can also be empty)
             TopicCommand topicCommand;
             topicCommand.execute(server, parsed);
             break;
         }
-        case MODE: {
-            //handle MODE
+        case MODE: { 
+            ModeCommand modeCommand;
+            modeCommand.execute(server, parsed);
             break;
         }
         case PING: {
@@ -488,7 +489,7 @@ void KickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
             if (channels[i].empty()) continue;
             kickFromChannel(server, sender, channels[i], users[0], reason);
         }
-    }
+    } // else i need to handle for example 3 channels and 5 users (don't know yet if error or what)
 }
 
 void KickCommand::kickFromChannel(Server& server, Client* sender, 
