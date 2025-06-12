@@ -156,11 +156,7 @@ void Server::runPoll() {
             }
             Client* curr = _clients[_poll_fds[i].fd];
             if (_poll_fds[i].revents & POLLHUP) {
-                std::cout << "Client has been disconnected !" << std::endl;
-                close(_poll_fds[i].fd);
-                delete _clients[_poll_fds[i].fd];
-                _clients.erase(_poll_fds[i].fd);
-                _poll_fds.erase(_poll_fds.begin() + i);
+                disconnectClient(_poll_fds[i].fd);
                 --i;
                 continue;
             } if (_poll_fds[i].revents & POLLIN) {
