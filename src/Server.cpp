@@ -151,6 +151,9 @@ void Server::runPoll() {
             }
         }
         for (size_t i = 1; i < _poll_fds.size(); i++) {
+            if (_clients.find(_poll_fds[i].fd) == _clients.end()) {
+                continue;
+            }
             Client* curr = _clients[_poll_fds[i].fd];
             if (_poll_fds[i].revents & POLLHUP) {
                 std::cout << "Client has been disconnected !" << std::endl;
@@ -169,17 +172,12 @@ void Server::runPoll() {
                     while (!(cmd = curr->extractLineFromRecv()).empty()) {
                         std::cout << "RECV " << curr->getClientFd() << ": " << cmd << std::endl;
                         _handleClientMessage(*this, curr, cmd);
-                        // Client* target = findSecondClient(curr->getClientFd());
-                        // if (target) {
-                        //     target->queueMessage(cmd + "\n");
-                        // }
+                        if (_clients.find(_poll_fds[i].fd) == _clients.end()) {
+                            break;
+                        }
                     }
                 } else if (bytes_read == 0) {
-                    std::cout << "Client has been disconnected !" << std::endl;
-                    close(_poll_fds[i].fd);
-                    delete _clients[_poll_fds[i].fd];
-                    _clients.erase(_poll_fds[i].fd);
-                    _poll_fds.erase(_poll_fds.begin() + i);
+                    disconnectClient(_poll_fds[i].fd);
                     --i;
                 } else {
                     std::cerr << "Error: receiving data" << std::endl;
