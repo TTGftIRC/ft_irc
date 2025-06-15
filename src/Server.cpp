@@ -151,16 +151,16 @@ void Server::runPoll() {
             }
         }
         for (size_t i = 1; i < _poll_fds.size(); i++) {
-            Client* curr = _clients[_poll_fds[i].fd];
+            int fd = _poll_fds[i].fd;
+            if (_clients.find(fd) == _clients.end()) continue;
             if (_poll_fds[i].revents & POLLHUP) {
-                std::cout << "Client has been disconnected !" << std::endl;
-                close(_poll_fds[i].fd);
-                delete _clients[_poll_fds[i].fd];
-                _clients.erase(_poll_fds[i].fd);
-                _poll_fds.erase(_poll_fds.begin() + i);
+                disconnectClient(_poll_fds[i].fd);
                 --i;
                 continue;
-            } if (_poll_fds[i].revents & POLLIN) {
+            }
+            if (_clients.find(fd) == _clients.end()) continue;
+            Client* curr = _clients[fd];
+            if (_poll_fds[i].revents & POLLIN) {
                 char buffer[1024] = {0};
                 size_t bytes_read = recv(_poll_fds[i].fd, buffer, sizeof(buffer), 0);
                 if (bytes_read > 0) {
@@ -169,21 +169,15 @@ void Server::runPoll() {
                     while (!(cmd = curr->extractLineFromRecv()).empty()) {
                         std::cout << "RECV " << curr->getClientFd() << ": " << cmd << std::endl;
                         _handleClientMessage(*this, curr, cmd);
-                        // Client* target = findSecondClient(curr->getClientFd());
-                        // if (target) {
-                        //     target->queueMessage(cmd + "\n");
-                        // }
+                        if (_clients.find(fd) == _clients.end()) break;
                     }
                 } else if (bytes_read == 0) {
-                    std::cout << "Client has been disconnected !" << std::endl;
-                    close(_poll_fds[i].fd);
-                    delete _clients[_poll_fds[i].fd];
-                    _clients.erase(_poll_fds[i].fd);
-                    _poll_fds.erase(_poll_fds.begin() + i);
+                    disconnectClient(_poll_fds[i].fd);
                     --i;
                 } else {
                     std::cerr << "Error: receiving data" << std::endl;
                 }
+                continue;
             } if (_poll_fds[i].revents & POLLOUT) {
                 if (curr->hasData()) {
                     const std::string& data_to_send = curr->getSendBuf();

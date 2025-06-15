@@ -1,7 +1,7 @@
 #include "../inc/Channel.hpp"
 
 
-Channel::Channel(const std::string& name) : _name(name) {
+Channel::Channel(const std::string& name) : _name(name), _userLimit(0), _inviteOnly(false), _topicLocked(false) {
     // std::cout << PURPLE << "Channel " << this->_name << " has been created!" << RESET << std::endl;
 }
 
