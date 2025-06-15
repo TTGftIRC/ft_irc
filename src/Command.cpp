@@ -267,7 +267,7 @@ void UserCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     _parsedCmd.srcClient->setUserFlag(true);
 
     if (_parsedCmd.srcClient->checkRegistered()) {
-        _parsedCmd.srcClient->queueMessage(RPL_WELCOME(_parsedCmd.srcClient->getNickname()));
+        _parsedCmd.srcClient->queueMessage(RPL_WELCOME(_parsedCmd.srcClient->getNickname(), _parsedCmd.srcClient->getUsername(), _parsedCmd.srcClient->getHostname()));
     }
 }
 
