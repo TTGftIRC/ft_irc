@@ -16,6 +16,7 @@ class Client {
         bool _authorized;
         bool _nickFlag;
         bool _userFlag;
+        bool _invisible;
     public:
         //getters
         int getClientFd(void) const;
@@ -27,6 +28,7 @@ class Client {
         bool getAuth(void) const;
         bool getNickFlag(void) const;
         bool getUserFlag(void) const;
+        bool getInvisible(void) const;
 
         //setters
         void setNickname(const std::string& nickname);
@@ -35,6 +37,7 @@ class Client {
         void setAuth(bool authorized);
         void setNickFlag(bool flag);
         void setUserFlag(bool flag);
+        void setInvisible(bool flag);
 
         Client(int client_fd, const std::string& hostname, Server* server);
         ~Client();

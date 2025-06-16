@@ -181,6 +181,7 @@ void Server::runPoll() {
             } if (_poll_fds[i].revents & POLLOUT) {
                 if (curr->hasData()) {
                     const std::string& data_to_send = curr->getSendBuf();
+                    std::cout << "SEND " << curr->getClientFd() << ": " << data_to_send << std::endl;
                     ssize_t bytes = send(_poll_fds[i].fd, data_to_send.data(), data_to_send.size(), 0);
                     if (bytes > 0) {
                         curr->helpSenderEvent(bytes);

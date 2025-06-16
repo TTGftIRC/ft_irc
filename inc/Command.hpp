@@ -14,6 +14,8 @@ class Client;
 #define ERR_ERRONEUSNICKNAME(client, nick) (std::string(":ircserver 432 ") + client + " " + nick + " :Erroneus nickname\r\n")
 #define ERR_NICKNAMEINUSE(client, nick) (std::string(":ircserver 433 ") + client + " " + nick + " :Nickname is already in use\r\n")
 #define ERR_NOORIGIN(client) (std::string("ircserver 409 ") + client + " :No origin specified\r\n")
+#define ERR_NOTREGISTERED(client) (std::string("ircserver 451 ") + client + " :You have not registered\r\n");
+#define ERR_USERDONTMATCH(client) (std::string("ircserver 502 ") + client + " :Cant change mode for other users\r\n");
 //ERR_NICKCOLLISION I am not sure if we have to and how to handle it
 
 struct parsedCmd {
@@ -35,6 +37,7 @@ enum cmds {
     TOPIC,
     MODE,
     PING,
+    CAP,
     UNKNOWN
 };
 
@@ -120,6 +123,11 @@ class ModeCommand : public ICommand {
 };
 
 class PingCommand : public ICommand {
+    public:
+        void execute(Server& server, const parsedCmd& _parsedCmd) const;
+};
+
+class CapCommand : public ICommand {
     public:
         void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
