@@ -489,7 +489,12 @@ void KickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
             if (channels[i].empty()) continue;
             kickFromChannel(server, sender, channels[i], users[0], reason);
         }
-    } // else i need to handle for example 3 channels and 5 users (don't know yet if error or what)
+    } else {  // if we have for example 2 channels and 3 users
+        //461 NEEDMOREPARAMS
+        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " KICK :Not enough parameters\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
 }
 
 void KickCommand::kickFromChannel(Server& server, Client* sender, 
@@ -559,12 +564,12 @@ void TopicCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
         sender->queueMessage(errorMessage);
         return;
     }
-    if (!channel->isOperator(sender->getNickname())) {
-        //IRC 482:ERR_CHANOPRIVSNEEDED
-        std::string errorMessage = ":ircserver 482 " + sender->getNickname() + " " + channelName + " :You're not channel operator\r\n";
-        sender->queueMessage(errorMessage);
-        return;
-    }
+    // if (!channel->isOperator(sender->getNickname())) {
+    //     //IRC 482:ERR_CHANOPRIVSNEEDED
+    //     std::string errorMessage = ":ircserver 482 " + sender->getNickname() + " " + channelName + " :You're not channel operator\r\n";
+    //     sender->queueMessage(errorMessage);
+    //     return;
+    // }  need to elimintate this check ( all users should set topic as long as channel has -t)
     if (_parsedCmd.args.size() == 1) { // if the user calls just TOPIC #channel 
         if (!channel->getTopic().empty()) { // if the topic on said channel is not empty
             std::string message = ":ircserver 332 " + sender->getNickname() + " " + channel->getName() + " :" + channel->getTopic() + "\r\n";
