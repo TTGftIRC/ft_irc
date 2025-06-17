@@ -276,8 +276,8 @@ void PrivmsgCommand::execute(Server& server, const parsedCmd& _parsedCmd) const 
     Client* sender = _parsedCmd.srcClient;
     //check if we have a min of 2 args
     if (_parsedCmd.args.size() < 2) {
-        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " PRIVMSG: Not enough parameters!\r\n";
-        sender->queueMessage(errorMessage);
+        // std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " PRIVMSG: Not enough parameters!\r\n";
+        sender->queueMessage(ERR_NEEDMOREPARAMS(sender->getNickname(), "PRIVMSG"));
         return;
     }
     std::string targetsString = _parsedCmd.args[0]; // channel or client
@@ -390,9 +390,8 @@ void PrivmsgCommand::handlePrivateMessage(Server& server, Client* sender,
 void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     Client* sender = _parsedCmd.srcClient;
     if (_parsedCmd.args.size() < 1) {
-        //IRC 461:ERR_NEEDMOREPARAMS
-        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " PART :Not enough parameters\r\n";
-        sender->queueMessage(errorMessage);
+        // std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " PART :Not enough parameters\r\n";
+        sender->queueMessage(ERR_NEEDMOREPARAMS(sender->getNickname(), _parsedCmd.cmd));
         return;
     }
     //split channels by comma
@@ -456,9 +455,8 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
 void KickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     Client* sender = _parsedCmd.srcClient;
     if (_parsedCmd.args.size() < 2) {
-        //IRC 461: ERR_NEEDMOREPARAMS
-        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " KICK :Not enough parameters\r\n";
-        sender->queueMessage(errorMessage);
+        // std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " KICK :Not enough parameters\r\n";
+        sender->queueMessage(ERR_NEEDMOREPARAMS(sender->getNickname(), _parsedCmd.cmd));
         return;
     }
     //sepparate the channels and the users by ','
@@ -490,9 +488,8 @@ void KickCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
             kickFromChannel(server, sender, channels[i], users[0], reason);
         }
     } else {  // if we have for example 2 channels and 3 users
-        //461 NEEDMOREPARAMS
-        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " KICK :Not enough parameters\r\n";
-        sender->queueMessage(errorMessage);
+        // std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " KICK :Not enough parameters\r\n";
+        sender->queueMessage(ERR_NEEDMOREPARAMS(sender->getNickname(), _parsedCmd.cmd));
         return;
     }
 }
@@ -508,12 +505,12 @@ void KickCommand::kickFromChannel(Server& server, Client* sender,
         sender->queueMessage(errorMessage);
         return;
     }
-    // if (!channel->hasClient(sender->getNickname())) {
-    //     //IRC 442:ERR_NOTONCHANNEL
-    //     std::string errorMessage = ":ircserver 442 " + sender->getNickname() + " " + channelName + " :You're not on that channel\r\n";
-    //     sender->queueMessage(errorMessage);
-    //     return;
-    // }
+    if (!channel->hasClient(sender->getNickname())) {
+        //IRC 442:ERR_NOTONCHANNEL
+        std::string errorMessage = ":ircserver 442 " + sender->getNickname() + " " + channelName + " :You're not on that channel\r\n";
+        sender->queueMessage(errorMessage);
+        return;
+    }
     if (!channel->isOperator(sender->getNickname())) {
         //IRC 482:ERR_CHANOPRIVSNEEDED
         std::string errorMessage = ":ircserver 482 " + sender->getNickname() + " " + channelName + " :You're not channel operator\r\n";
@@ -544,9 +541,8 @@ void KickCommand::kickFromChannel(Server& server, Client* sender,
 void TopicCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     Client* sender = _parsedCmd.srcClient;
     if (_parsedCmd.args.size() < 1) {
-        //IRC 461: ERR_NEEDMOREPARAMS
-        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " TOPIC :Not enough parameters\r\n";
-        sender->queueMessage(errorMessage);
+        // std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " TOPIC :Not enough parameters\r\n";
+        sender->queueMessage(ERR_NEEDMOREPARAMS(sender->getNickname(), _parsedCmd.cmd));
         return;
     }
 
@@ -564,12 +560,6 @@ void TopicCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
         sender->queueMessage(errorMessage);
         return;
     }
-    // if (!channel->isOperator(sender->getNickname())) {
-    //     //IRC 482:ERR_CHANOPRIVSNEEDED
-    //     std::string errorMessage = ":ircserver 482 " + sender->getNickname() + " " + channelName + " :You're not channel operator\r\n";
-    //     sender->queueMessage(errorMessage);
-    //     return;
-    // }  need to elimintate this check ( all users should set topic as long as channel has -t)
     if (_parsedCmd.args.size() == 1) { // if the user calls just TOPIC #channel 
         if (!channel->getTopic().empty()) { // if the topic on said channel is not empty
             std::string message = ":ircserver 332 " + sender->getNickname() + " " + channel->getName() + " :" + channel->getTopic() + "\r\n";
@@ -603,9 +593,8 @@ void JoinCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     Client* sender = _parsedCmd.srcClient;
     
     if (_parsedCmd.args.size() < 1 || _parsedCmd.args[0].empty()) {
-        //IRC 461 ERR_NEEDMOREPARAMS
-        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " JOIN :Not enough parameters\r\n";
-        sender->queueMessage(errorMessage);
+        // std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " JOIN :Not enough parameters\r\n";
+        sender->queueMessage(ERR_NEEDMOREPARAMS(sender->getNickname(), _parsedCmd.cmd));
         return;
     }
     std::vector<std::string> channels = splitByComma(_parsedCmd.args[0]);
@@ -678,8 +667,8 @@ void InviteCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     Client* sender = _parsedCmd.srcClient;
     if (_parsedCmd.args.size() < 2) {
         //461 ERR_NEEDMOREPARAMS
-        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " INVITE :Not enough parameters\r\n";
-        sender->queueMessage(errorMessage);
+        // std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " INVITE :Not enough parameters\r\n";
+        sender->queueMessage(ERR_NEEDMOREPARAMS(sender->getNickname(), _parsedCmd.cmd));
         return;
     }
     std::string targetNick = _parsedCmd.args[0];
@@ -794,9 +783,8 @@ void PingCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
 void ModeCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     Client* sender = _parsedCmd.srcClient;
     if (_parsedCmd.args.size() < 2) {
-        //461 ERR_NEEDMOREPARAMS
-        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " MODE :Not enough parameters\r\n";
-        sender->queueMessage(errorMessage);
+        // std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " MODE :Not enough parameters\r\n";
+        sender->queueMessage(ERR_NEEDMOREPARAMS(sender->getNickname(), _parsedCmd.cmd));
         return;
     }
     std::string channelName = _parsedCmd.args[0];
@@ -877,9 +865,8 @@ void ModeCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
                     channel->broadcast(broadMsg, sender->getNickname());;
                 } else {
                     if (index > _parsedCmd.args.size()) {
-                        //461 ERR_NEEDMOREPARAMS
-                        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " MODE :Not enough parameters\r\n";
-                        sender->queueMessage(errorMessage);
+                        // std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " MODE :Not enough parameters\r\n";
+                        sender->queueMessage(ERR_NEEDMOREPARAMS(sender->getNickname(), _parsedCmd.cmd));
                         return;
                     }
                     std::string argument = _parsedCmd.args[index];
@@ -895,9 +882,8 @@ void ModeCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
             }
             case 'o': {
                 if (index > _parsedCmd.args.size()) {
-                    //461 ERR_NEEDMOREPARAMS
-                    std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " MODE :Not enough parameters\r\n";
-                    sender->queueMessage(errorMessage);
+                    // std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " MODE :Not enough parameters\r\n";
+                    sender->queueMessage(ERR_NEEDMOREPARAMS(sender->getNickname(), _parsedCmd.cmd));
                     return; 
                 }
                 std::string target = _parsedCmd.args[index];
@@ -937,15 +923,14 @@ void ModeCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
                     }
                 } else {
                     if (index > _parsedCmd.args.size()) {
-                        //461 ERR_NEEDMOREPARAMS
-                        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " MODE :Not enough parameters\r\n";
-                        sender->queueMessage(errorMessage);
+                        // std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " MODE :Not enough parameters\r\n";
+                        sender->queueMessage(ERR_NEEDMOREPARAMS(sender->getNickname(), _parsedCmd.cmd));
                         return; 
                     }
                     std::string number = _parsedCmd.args[index];
                     if (!isNum(number.c_str())) {
-                        std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " MODE :Not enough parameters\r\n";
-                        sender->queueMessage(errorMessage);
+                        // std::string errorMessage = ":ircserver 461 " + sender->getNickname() + " MODE :Not enough parameters\r\n";
+                        sender->queueMessage(ERR_NEEDMOREPARAMS(sender->getNickname(), _parsedCmd.cmd));
                     }
                     std::stringstream ss(number);
                     size_t limit;
