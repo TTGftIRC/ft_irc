@@ -7,6 +7,11 @@ class Client;
 
 //macros for error codes
 #define RPL_WELCOME(nick, user, host) (std::string(":ircserver 001 ") + nick + " :Welcome to the server, " + nick + "[!" + user + "@" + host + "]\r\n")
+#define RPL_TOPIC(client, channel, topic) (std::string(":ircserver 332 ") + client + " " + channel + " :" + topic + "\r\n")
+#define RPL_NOTOPIC(client, channel) (std::string(":ircserver 331 ") + client + " " + channel + " :No topic is set\r\n")
+#define RPL_INVITING(client, target, channel) (std::string(":ircserver 341 ") + client + " " + target + " " + channel + "\r\n")
+#define RPL_NAMEREPLY(client, channel, list) (std::string(":ircserver 353 ") + client + " = " + channel + " :" + list + "\r\n")
+#define RPL_ENDOFNAMES(client, channel) (std::string(":ircserver 366 ") + client + " " + channel + " :End of /NAMES list.\r\n")
 #define ERR_NEEDMOREPARAMS(client, command) (std::string(":ircserver 461 ") + client + " " + command + " :Not enough parameters\r\n")
 #define ERR_ALREADYREGISTERED(client) (std::string(":ircserver 462 ") + client + " :You may not reregister\r\n")
 #define ERR_PASSWDMISMATCH(client) (std::string(":ircserver 464 ") + client + " :Password incorrect\r\n")
@@ -14,6 +19,20 @@ class Client;
 #define ERR_ERRONEUSNICKNAME(client, nick) (std::string(":ircserver 432 ") + client + " " + nick + " :Erroneus nickname\r\n")
 #define ERR_NICKNAMEINUSE(client, nick) (std::string(":ircserver 433 ") + client + " " + nick + " :Nickname is already in use\r\n")
 #define ERR_NOORIGIN(client) (std::string("ircserver 409 ") + client + " :No origin specified\r\n")
+#define ERR_NOTEXTTOSEND(client) (std::string("ircserver 412 ") + client + " :No text to send\r\n")
+#define ERR_NOSUCHCHANNEL(client, channel) (std::string(":ircserver 403 ") + client + " " + channel + " :No such channel\r\n")
+#define ERR_NOSUCHNICK(client, target) (std::string(":ircserver 401 ") + client + " " + target + " :No such nick\r\n")
+#define ERR_NORECIPIENT(client, command) (std::string(":ircserver 411 ") + client + " :No recipient given (" + command + ")\r\n")
+#define ERR_CANNOTSENDTOCHAN(client, channel) (std::string(":ircserver 404 ") + client + " " + channel + " :Cannot send to channel\r\n")
+#define ERR_USRNOTINCHANNEL(client, target, channel) (std::string(":ircserver 441 ") + client + " " + target + " " + channel + " :Theu aren't on that channel\r\n")
+#define ERR_NOTONCHANNEL(client, channel) (std::string(":ircserver 442 ") + client + " " + channel + " :You're not on that channel\r\n")
+#define ERR_USERONCHANNEL(client, target, channel) (std::string(":ircserver 443 ") + client + " " + target + " " + channel + " :is already on channel\r\n")
+#define ERR_CHANOPRIVSNEEDED(client, channel) (std::string(":ircserver 482 ") + client + " " + channel + " :You're not channel operator\r\n")
+#define ERR_BADCHANMASK(client, channel) (std::string(":ircserver 476 ") + client + " " + channel + " :Bad Channel Mask\r\n")
+#define ERR_INVITEONLYCHAN(client, channel) (std::string(":ircserver 473 ") + client + " " + channel + " :Cannot join channel (+i)\r\n")
+#define ERR_CHANNELISFULL(client, channel) (std::string(":ircserver 471 ") + client + " " + channel + " :Cannot join channel (+l)\r\n")
+#define ERR_BADCHANNELKEY(client, channel) (std::string(":ircserver 475 ") + client + " " + channel + " :Cannot join channel (+k)\r\n")
+
 #define ERR_NOTREGISTERED(client) (std::string("ircserver 451 ") + client + " :You have not registered\r\n");
 #define ERR_USERDONTMATCH(client) (std::string("ircserver 502 ") + client + " :Cant change mode for other users\r\n");
 //ERR_NICKCOLLISION I am not sure if we have to and how to handle it
