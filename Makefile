@@ -22,7 +22,7 @@ $(NAME): $(OBJS)
 	@echo "$(GREEN)✔ Successfully compiled $(NAME)$(RESET)"
 
 clean:
-	@rm -f 
+	rm -rf obj
 	@echo "$(RED)✔ Successfully cleaned object files$(RED)$(RESET)"
 fclean: clean
 	@rm -f $(NAME)
