@@ -1,6 +1,6 @@
-#include "../inc/Client.hpp"
-#include "../inc/Channel.hpp"
-#include "../inc/Server.hpp"
+#include "../../inc/Client.hpp"
+#include "../../inc/Channel.hpp"
+#include "../../inc/Server.hpp"
 
 Client::Client(int client_fd, const std::string& hostname, Server* server) : _serv_ref(server), _client_fd(client_fd), _hostname(hostname), _authorized(false), _nickFlag(false), _userFlag(false) {
     std::cout << "new client connection " << _client_fd << std::endl;
@@ -26,7 +26,7 @@ const std::string& Client::getHostname(void) const {
     return _hostname;
 }
 
-const std::string& Client::getSendBuf(void) const {
+std::string& Client::getSendBuf(void) {
     return _send_buffer;
 }
 
@@ -96,10 +96,12 @@ bool Client::hasData() const {
 }
 
 void Client::queueMessage(const std::string& msg) {
-    _send_buffer += msg;
+    
+    // bool buff_empty = _send_buffer.empty();
 
-    //This is callback for the server to add the event POLLOUT
+    _send_buffer += msg;
     _serv_ref->requestPollOut(_client_fd, true);
+    //This is callback for the server to add the event POLLOUT
 }
 
 //This a helper function for send() method in server
@@ -120,7 +122,7 @@ void Client::helpSenderEvent(size_t len) {
     } else {
         _send_buffer.erase(0, len);
     }
-
+    
     //if buf empty after proccesing buf, disable POLLOUT
     if (_send_buffer.empty()) {
         _serv_ref->requestPollOut(_client_fd, false);

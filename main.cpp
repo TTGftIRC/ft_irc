@@ -1,6 +1,8 @@
 #include "inc/Server.hpp"
 #include "inc/Command.hpp"
 
+volatile sig_atomic_t sig_recvied = 0;
+
 bool isNum(const char* input) {
     for (size_t i = 0; input[i] != '\0'; i++) {
         if (!std::isdigit(input[i])) {
@@ -10,9 +12,18 @@ bool isNum(const char* input) {
     return true;
 }
 
+void handle_sig(int signal)
+{
+    (void)signal;
+    sig_recvied = 1;
+    exit(EXIT_SUCCESS);
+}
+
 int main(int ac, char **av) {
     int port;
     std::string pass;
+    std::signal(SIGINT, handle_sig);
+    std::signal(SIGTERM, handle_sig);
 
     if (ac != 3) {
         std::cerr << "Error: invalid amount of arguments: try ./irc PORT PASSWORD" << std::endl;
@@ -24,7 +35,7 @@ int main(int ac, char **av) {
         std::cerr << "Error: Invalid port" << std::endl;
         return 1;
     }
-
+    
     Server server;
     server.setPass(pass);
     server.setPort(port);

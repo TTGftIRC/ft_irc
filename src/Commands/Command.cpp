@@ -1,5 +1,4 @@
-#include "../inc/Command.hpp"
-#include <algorithm>
+#include "../../inc/Command.hpp"
 
 ICommand::~ICommand() {}
 

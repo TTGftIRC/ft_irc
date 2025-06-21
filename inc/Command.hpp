@@ -1,5 +1,6 @@
 #pragma once
 #include "Server.hpp"
+#include <algorithm>
 #include <set>
 
 class Server;

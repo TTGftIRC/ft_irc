@@ -1,4 +1,4 @@
-#include "../inc/Channel.hpp"
+#include "../../inc/Channel.hpp"
 
 
 Channel::Channel(const std::string& name) : _name(name) {
@@ -10,7 +10,6 @@ Channel::~Channel() {
     _clients.clear();
     //here only the clients continer should be removed not the clients pointers
 }
-
 
 const std::string& Channel::getName() const { return this->_name; }
 
@@ -97,7 +96,6 @@ bool Channel::isInvited(const std::string& nickname) const {
 bool Channel::isInviteOnly() const {
     return _inviteOnly;
 }
-
 
 void Channel::setPassword(const std::string& password) { _password = password;}
 
