@@ -59,7 +59,7 @@ int Server::handleNewServConnect(){
 }
 
 bool Server::RecvData(int i, Client *curr){
-    char buffer[1024] = {0};
+    char buffer[BUFFER_SIZE] = {0};
     ssize_t bytes_read = recv(_poll_fds[i].fd, buffer, sizeof(buffer), 0);                
     if (bytes_read > 0) {
         curr->appendRecvData(buffer);
@@ -132,7 +132,7 @@ void Server::runPoll() {
     server_fd.revents = 0;
     _poll_fds.push_back(server_fd); // first elem of the pollfd will be the server which will be waiting for new events
     while (!sig_recvied) {
-        listenPoll(_poll_fds.data(), _poll_fds.size(), -1);
+        listenPoll(_poll_fds.data(), _poll_fds.size(), 10);
         if (_poll_fds[0].revents & POLLIN) {
             if (_poll_fds[0].fd == _listening_socket) {
                 // handle new client conexions

@@ -23,6 +23,8 @@
 #include "Channel.hpp"
 #include "Command.hpp"
 #include <csignal>
+#define BUFFER_SIZE 4096
+
 
 extern volatile sig_atomic_t sig_recvied;//exter for visab across files
 class Client;
