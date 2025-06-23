@@ -71,6 +71,18 @@ bool isValidChannelName(const std::string& name) {
 void _handleClientMessage(Server& server, Client* client, const std::string& cmd) {
     parsedCmd parsed = parseInput(cmd, client);
     cmds CommnadEnum = getCommandEnum(parsed.cmd);
+    if (!client->checkRegistered() && 
+        (CommnadEnum != PASS && 
+        CommnadEnum != NICK && 
+        CommnadEnum != USER && 
+        CommnadEnum != CAP && 
+        CommnadEnum != QUIT && 
+        CommnadEnum != PING)) {
+            std::string clientName = (client->getNickFlag()) ? client->getNickname() : "*";
+            std::string errorMsg = ERR_NOTREGISTERED(clientName);
+            client->queueMessage(errorMsg);
+            return ;
+        }
     switch (CommnadEnum) {
         case PASS: { // PASS blablabli
             PassCommand passCommand;
@@ -132,10 +144,12 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             pingCommand.execute(server, parsed);
             break;
         }
+        case CAP: {
+            CapCommand capCommand;
+            capCommand.execute(server, parsed);
+            break;
+        }
         case UNKNOWN: {
-            if (parsed.cmd == "CAP") {
-                parsed.srcClient->queueMessage("CAP * LS :\r\n");
-            }
             break;
         }
         default: {
@@ -158,6 +172,7 @@ cmds getCommandEnum(const std::string& cmd) {
     if (cmd == "TOPIC") return TOPIC;
     if (cmd == "MODE") return MODE;
     if (cmd == "PING") return PING;
+    if (cmd == "CAP") return CAP;
     return UNKNOWN;
 }
 
@@ -730,6 +745,26 @@ void ModeCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
         sender->queueMessage(ERR_NEEDMOREPARAMS(sender->getNickname(), _parsedCmd.cmd));
         return;
     }
+    //mode for client
+    if (_parsedCmd.args[0][0] != '#') {
+        if (_parsedCmd.args[1] == "+i" || _parsedCmd.args[1] == "-i") {
+            if (_parsedCmd.srcClient->getNickname() != _parsedCmd.args[0]) {
+                std::string errorMsg = ERR_USERDONTMATCH(_parsedCmd.srcClient->getNickname());
+                _parsedCmd.srcClient->queueMessage(errorMsg);
+                return;
+            }
+            std::string replyMsg = ":" + _parsedCmd.srcClient->getNickname() + "!" + _parsedCmd.srcClient->getUsername() + "@" + _parsedCmd.srcClient->getHostname() + " MODE " + _parsedCmd.args[0] + " :" + _parsedCmd.args[1] + "\r\n";
+            if (_parsedCmd.args[1] == "+i") {
+                _parsedCmd.srcClient->setInvisible(true);
+                _parsedCmd.srcClient->queueMessage(replyMsg);
+                return ;
+            } else if (_parsedCmd.args[1] == "-i") {
+                _parsedCmd.srcClient->setInvisible(false);
+                _parsedCmd.srcClient->queueMessage(replyMsg);
+                return ;
+            }
+        }
+    }
     std::string channelName = _parsedCmd.args[0];
     Channel* channel = server.getChannel(channelName);
     if (!channel) {
@@ -882,4 +917,9 @@ void ModeCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
             }
         }
     }
+}
+
+void CapCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    (void)server;
+    _parsedCmd.srcClient->queueMessage("CAP * LS :\r\n");
 }
