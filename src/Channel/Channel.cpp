@@ -1,4 +1,4 @@
-#include "../inc/Channel.hpp"
+#include "../../inc/Channel.hpp"
 
 
 Channel::Channel(const std::string& name) : _name(name), _userLimit(0), _inviteOnly(false), _topicLocked(false) {
@@ -7,14 +7,9 @@ Channel::Channel(const std::string& name) : _name(name), _userLimit(0), _inviteO
 
 Channel::~Channel() {
     std::cout << ORANGE << "Channel " << this->_name << " has been deleted!" << RESET << std::endl;
-    
-    std::vector<Client*>::iterator it;                    // don't know yet if i need this, worst chase scenario it's some useless extra lines of code
-    for (it = _clients.begin(); it != _clients.end(); ++it) {
-        delete *it;
-    }
     _clients.clear();
+    //here only the clients continer should be removed not the clients pointers
 }
-
 
 const std::string& Channel::getName() const { return this->_name; }
 
@@ -41,8 +36,6 @@ void Channel::setTopic(const std::string& topic, const std::string& setter) {
     this->_topic = topic;
     //optional for server console
     std::cout << GREEN << "Topic for channel " << _name << " changed to: " << topic << " by " << setter  << "." << RESET << std::endl;
-
-
 }
 
 bool Channel::isTopicLocked() const { return this->_topicLocked; }
@@ -77,7 +70,6 @@ bool Channel::hasClient(const std::string& nickname) const {
     return false;
 }
 
-
 void Channel::addOperator(const std::string& nickname) {
     _operators.insert(nickname);
 }
@@ -89,7 +81,6 @@ void Channel::removeOperator(const std::string& nickname) {
 bool Channel::isOperator(const std::string& nickname) const {
     return _operators.find(nickname) != _operators.end();
 }
-
 
 void Channel::invite(const std::string& nickname) {
     _invited.insert(nickname);
@@ -105,7 +96,6 @@ bool Channel::isInvited(const std::string& nickname) const {
 bool Channel::isInviteOnly() const {
     return _inviteOnly;
 }
-
 
 void Channel::setPassword(const std::string& password) { _password = password;}
 
