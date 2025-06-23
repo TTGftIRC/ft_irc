@@ -1,4 +1,4 @@
-#include "../inc/Command.hpp"
+#include "../../inc/Command.hpp"
 #include <algorithm>
 
 ICommand::~ICommand() {}
@@ -99,6 +99,11 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             userCommand.execute(server, parsed);
             break;
         }
+        case PRIVMSG: {
+            PrivmsgCommand privmsgCommand;
+            privmsgCommand.execute(server, parsed);
+            break;
+        }
         case JOIN: { // JOIN #general,#strict,#channel  blablabli,lalala
             JoinCommand joinCommand;
             joinCommand.execute(server, parsed);
@@ -124,7 +129,7 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             inviteCommand.execute(server, parsed);
             break;
         }
-        case TOPIC: { // TOPIC #general -- you get the topic   TOPIC #general :cats -- you set the topic ( can also be empty)
+        case TOPIC: { // TOPIC #general -- you get the topic   TOPIC #general :caFts -- you set the topic ( can also be empty)
             TopicCommand topicCommand;
             topicCommand.execute(server, parsed);
             break;

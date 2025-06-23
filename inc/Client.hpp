@@ -24,7 +24,7 @@ class Client {
         const std::string& getUsername(void) const;
         const std::string& getRealname(void) const;
         const std::string& getHostname(void) const;
-        const std::string& getSendBuf(void) const;
+        std::string& getSendBuf(void) ;
         bool getAuth(void) const;
         bool getNickFlag(void) const;
         bool getUserFlag(void) const;
