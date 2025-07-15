@@ -945,9 +945,50 @@ void CapCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
 }
 
 void WhoCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    (void)server;
+    (void)_parsedCmd;
+}
 
+std::string WhoIsCommand::getWhoIsChannels(Client& targetClient, Client& srcClient, Server& server) const {
+    std::string resChannels;
+    std::set<Channel*> allChannels = server.getChannels();
+    if (!targetClient.getInvisible()) {
+        for (std::set<Channel*>::iterator it = allChannels.begin(); it != allChannels.end(); ++it) {
+            if ((*it)->hasClient(targetClient.getNickname())) {
+                resChannels += (*it)->getName() + " ";
+            }
+        }
+    } else {
+        for (std::set<Channel*>::iterator it = allChannels.begin(); it != allChannels.end(); ++it) {
+            if ((*it)->hasClient(srcClient.getNickname()) && (*it)->hasClient(targetClient.getNickname())) {
+                resChannels += (*it)->getName() + " ";
+            }
+        }
+    }
+    return resChannels;
 }
 
 void WhoIsCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
-    
+    if (_parsedCmd.args.size() > 1) {
+        _parsedCmd.srcClient->queueMessage(ERR_NEEDMOREPARAMS(_parsedCmd.srcClient->getNickname(), _parsedCmd.cmd));
+        return;
+    } else if (_parsedCmd.args.size() < 1) {
+        _parsedCmd.srcClient->queueMessage(ERR_NONICKNAMEGIVEN(_parsedCmd.srcClient->getNickname()));
+        return;
+    }
+
+    if (!server.getClientByNick(_parsedCmd.args[0])) {
+        _parsedCmd.srcClient->queueMessage(ERR_NOSUCHNICK(_parsedCmd.srcClient->getNickname(), _parsedCmd.args[0]));
+    } else {
+        Client* targetClient = server.getClientByNick(_parsedCmd.args[0]);
+        _parsedCmd.srcClient->queueMessage(RPL_WHOISUSER(_parsedCmd.srcClient->getNickname(), targetClient->getNickname(), targetClient->getUsername(), targetClient->getHostname(), targetClient->getRealname()));
+        _parsedCmd.srcClient->queueMessage(RPL_WHOISSERVER(_parsedCmd.srcClient->getNickname(), targetClient->getNickname()));
+        if (!getWhoIsChannels(*targetClient, *_parsedCmd.srcClient, server).empty()) {
+            std::string channels = getWhoIsChannels(*targetClient, *_parsedCmd.srcClient, server);
+            _parsedCmd.srcClient->queueMessage(RPL_WHOISCHANNELS(_parsedCmd.srcClient->getNickname(), targetClient->getNickname(), channels));
+        }
+        _parsedCmd.srcClient->queueMessage(RPL_WHOISIDLE(_parsedCmd.srcClient->getNickname(), targetClient->getNickname(), targetClient->getIdleTime(), std::time(NULL) - targetClient->getSignOnTime()));
+    }
+
+    _parsedCmd.srcClient->queueMessage(RPL_ENDOFWHOIS(_parsedCmd.srcClient->getNickname(), _parsedCmd.args[0]));
 }
