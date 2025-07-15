@@ -23,6 +23,7 @@
 #include "Channel.hpp"
 #include "Command.hpp"
 #include <csignal>
+#include <ctime>
 
 extern volatile sig_atomic_t sig_recvied;//exter for visab across files
 class Client;

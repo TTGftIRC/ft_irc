@@ -70,20 +70,31 @@ bool isValidChannelName(const std::string& name) {
 
 void _handleClientMessage(Server& server, Client* client, const std::string& cmd) {
     parsedCmd parsed = parseInput(cmd, client);
-    cmds CommnadEnum = getCommandEnum(parsed.cmd);
+    cmds CommandEnum = getCommandEnum(parsed.cmd);
     if (!client->checkRegistered() && 
-        (CommnadEnum != PASS && 
-        CommnadEnum != NICK && 
-        CommnadEnum != USER && 
-        CommnadEnum != CAP && 
-        CommnadEnum != QUIT && 
-        CommnadEnum != PING)) {
+        (CommandEnum != PASS && 
+        CommandEnum != NICK && 
+        CommandEnum != USER && 
+        CommandEnum != CAP && 
+        CommandEnum != QUIT && 
+        CommandEnum != PING)) {
             std::string clientName = (client->getNickFlag()) ? client->getNickname() : "*";
             std::string errorMsg = ERR_NOTREGISTERED(clientName);
             client->queueMessage(errorMsg);
             return ;
         }
-    switch (CommnadEnum) {
+    if (CommandEnum == PRIVMSG || 
+        CommandEnum == JOIN || 
+        CommandEnum == PART || 
+        CommandEnum == MODE || 
+        CommandEnum == WHO || 
+        CommandEnum == WHOIS || 
+        CommandEnum == NICK || 
+        CommandEnum == QUIT || 
+        CommandEnum == INVITE) {
+            client->setLastActivityTime(std::time(NULL));
+        }
+    switch (CommandEnum) {
         case PASS: { // PASS blablabli
             PassCommand passCommand;
             passCommand.execute(server, parsed);
@@ -147,6 +158,14 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
         case CAP: {
             CapCommand capCommand;
             capCommand.execute(server, parsed);
+            break;
+        }
+        case WHO: {
+            //who command
+            break;
+        }
+        case WHOIS: {
+            //whois command
             break;
         }
         case UNKNOWN: {
@@ -282,6 +301,7 @@ void UserCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     _parsedCmd.srcClient->setUserFlag(true);
 
     if (_parsedCmd.srcClient->checkRegistered()) {
+        _parsedCmd.srcClient->setSigOnTime(std::time(NULL));
         _parsedCmd.srcClient->queueMessage(RPL_WELCOME(_parsedCmd.srcClient->getNickname(), _parsedCmd.srcClient->getUsername(), _parsedCmd.srcClient->getHostname()));
     }
 }
@@ -922,4 +942,12 @@ void ModeCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
 void CapCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     (void)server;
     _parsedCmd.srcClient->queueMessage("CAP * LS :\r\n");
+}
+
+void WhoCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+
+}
+
+void WhoIsCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    
 }

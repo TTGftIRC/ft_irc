@@ -57,6 +57,8 @@ enum cmds {
     MODE,
     PING,
     CAP,
+    WHO,
+    WHOIS,
     UNKNOWN
 };
 
@@ -147,6 +149,16 @@ class PingCommand : public ICommand {
 };
 
 class CapCommand : public ICommand {
+    public:
+        void execute(Server& server, const parsedCmd& _parsedCmd) const;
+};
+
+class WhoCommand : public ICommand {
+    public:
+        void execute(Server& server, const parsedCmd& _parsedCmd) const;
+};
+
+class WhoIsCommand : public ICommand {
     public:
         void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };

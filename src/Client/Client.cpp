@@ -46,6 +46,14 @@ bool Client::getInvisible(void) const {
     return _invisible;
 }
 
+std::time_t Client::getSignOnTime(void) const {
+    return _signOnTime;
+}
+
+std::time_t Client::getIdleTime(void) const {
+    return std::time(NULL) - _lastActivityTime;
+}
+
 void Client::setNickname(const std::string& nickname) {
     _nickname = nickname;
 }
@@ -72,6 +80,14 @@ void Client::setUserFlag(bool flag) {
 
 void Client::setInvisible(bool flag) {
     _invisible = flag;
+}
+
+void Client::setSigOnTime(std::time_t signOnTime) {
+    _signOnTime = signOnTime;
+}
+
+void Client::setLastActivityTime(std::time_t lastActivityTime) {
+    _lastActivityTime = lastActivityTime;
 }
 
 void Client::appendRecvData(const std::string& buf) {
