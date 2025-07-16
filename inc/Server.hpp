@@ -67,6 +67,7 @@ public:
     void requestPollOut(int client_fd, bool enable);
     void disconnectClient(int client_fd);
     const std::string& getPass();
+    std::vector<Client*> getAllClients() const;
     Server();
     ~Server();
 };

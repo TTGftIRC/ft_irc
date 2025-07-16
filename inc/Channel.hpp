@@ -37,6 +37,7 @@ public:
     const std::string &getName() const;
     const std::string &getTopic() const;
     size_t getUserLimit() const;
+    std::vector<Client*> getUsers() const;
     
     // Topic control
     void setTopic(const std::string &topic, const std::string &setter);

@@ -20,3 +20,11 @@ Client* Server::findSecondClient(int sock_src) {
     }
     return NULL;
 }
+
+std::vector<Client*> Server::getAllClients() const {
+    std::vector<Client*> clients;
+    for (std::map<int, Client*>::const_iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        clients.push_back(it->second);
+    }
+    return clients;
+}

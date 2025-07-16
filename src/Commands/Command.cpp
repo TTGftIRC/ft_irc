@@ -944,12 +944,68 @@ void CapCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     _parsedCmd.srcClient->queueMessage("CAP * LS :\r\n");
 }
 
-void WhoCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
-    (void)server;
-    (void)_parsedCmd;
+bool isVisible(Client& srcClient, Client& targetClient, bool isChannel, Server& server) {
+    if (isChannel) {
+        if (!targetClient.getInvisible()) return true;
+        return false;
+    }
+    std::set<Channel*> allChannels = server.getChannels();
+    for (std::set<Channel*>::iterator it = allChannels.begin(); it != allChannels.end(); ++it) {
+            if ((*it)->hasClient(targetClient.getNickname()) && 
+            (*it)->hasClient(srcClient.getNickname()) && 
+            !targetClient.getInvisible()) {
+                return true;
+            }
+        }
+    return false;
 }
 
-std::string WhoIsCommand::getWhoIsChannels(Client& targetClient, Client& srcClient, Server& server) const {
+std::string isClientOperator(Client& client, std::set<Channel*> allChannels) {
+    for (std::set<Channel*>::iterator it = allChannels.begin(); it != allChannels.end(); ++it) {
+        if ((*it)->isOperator(client.getNickname())) {
+            return "+";
+        }
+    }
+    return "";
+}
+
+void WhoCommand::showUserInfo(Client& srcClient, Client& targetClient, Server& server, bool isChannel) const {
+    if (isVisible(srcClient, targetClient, isChannel, server)) {
+        srcClient.queueMessage(RPL_WHOREPLY(srcClient.getNickname(), getClientAllChannels(targetClient, srcClient, server), targetClient.getUsername(), targetClient.getHostname(), targetClient.getUsername(), isClientOperator(targetClient, server.getChannels()), targetClient.getRealname()));
+    }
+}
+
+void WhoCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
+    if (_parsedCmd.args.size() > 1) {
+        _parsedCmd.srcClient->queueMessage(ERR_NEEDMOREPARAMS(_parsedCmd.srcClient->getNickname(), _parsedCmd.cmd));
+        return;
+    }
+    if (_parsedCmd.args.size() == 0) {
+        std::vector<Client*> allClients = server.getAllClients();
+        for (std::vector<Client*>::iterator it = allClients.begin(); it != allClients.end(); ++it) {
+            showUserInfo(*_parsedCmd.srcClient, **it, server, false);
+        }
+    } else {
+        if (_parsedCmd.args[0][0] == '#') {
+            Channel* channel = server.getChannel(_parsedCmd.args[0].substr(1));
+            if (channel != NULL) {
+                std::vector<Client*> allClients = channel->getUsers();
+                for (std::vector<Client*>::iterator it = allClients.begin(); it != allClients.end(); ++it) {
+                    showUserInfo(*_parsedCmd.srcClient, **it, server, true);
+                }
+            }
+        } else {
+            Client* client = server.getClientByNick(_parsedCmd.args[0]);
+            if (client != NULL) {
+                showUserInfo(*_parsedCmd.srcClient, *client, server, false);
+            }
+        }
+    }
+
+    _parsedCmd.srcClient->queueMessage(RPL_ENDOFWHO(_parsedCmd.srcClient->getNickname()));
+}
+
+std::string getClientAllChannels(Client& targetClient, Client& srcClient, Server& server) {
     std::string resChannels;
     std::set<Channel*> allChannels = server.getChannels();
     if (!targetClient.getInvisible()) {
@@ -983,8 +1039,8 @@ void WhoIsCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
         Client* targetClient = server.getClientByNick(_parsedCmd.args[0]);
         _parsedCmd.srcClient->queueMessage(RPL_WHOISUSER(_parsedCmd.srcClient->getNickname(), targetClient->getNickname(), targetClient->getUsername(), targetClient->getHostname(), targetClient->getRealname()));
         _parsedCmd.srcClient->queueMessage(RPL_WHOISSERVER(_parsedCmd.srcClient->getNickname(), targetClient->getNickname()));
-        if (!getWhoIsChannels(*targetClient, *_parsedCmd.srcClient, server).empty()) {
-            std::string channels = getWhoIsChannels(*targetClient, *_parsedCmd.srcClient, server);
+        if (!getClientAllChannels(*targetClient, *_parsedCmd.srcClient, server).empty()) {
+            std::string channels = getClientAllChannels(*targetClient, *_parsedCmd.srcClient, server);
             _parsedCmd.srcClient->queueMessage(RPL_WHOISCHANNELS(_parsedCmd.srcClient->getNickname(), targetClient->getNickname(), channels));
         }
         _parsedCmd.srcClient->queueMessage(RPL_WHOISIDLE(_parsedCmd.srcClient->getNickname(), targetClient->getNickname(), targetClient->getIdleTime(), std::time(NULL) - targetClient->getSignOnTime()));

@@ -5,6 +5,13 @@
 class Server;
 class Client;
 
+template<typename T>
+std::string toString(T value) {
+    std::ostringstream oss;
+    oss << value;
+    return oss.str();
+}
+
 //macros for error codes
 #define RPL_WELCOME(nick, user, host) (std::string(":ircserver 001 ") + nick + " :Welcome to the server, " + nick + "[!" + user + "@" + host + "]\r\n")
 #define RPL_TOPIC(client, channel, topic) (std::string(":ircserver 332 ") + client + " " + channel + " :" + topic + "\r\n")
@@ -39,6 +46,8 @@ class Client;
 #define RPL_WHOISCHANNELS(client, nick, channels) (std::string(":ircserver 319 ") + client + " " + nick + " :" + channels + "\r\n")
 #define RPL_WHOISIDLE(client, nick, idleTime, signon)(std::string(":ircserver 317 ") + client + " " + nick + " " + toString(idleTime) + " " + toString(signon) + " :seconds idle, signon time\r\n")
 #define RPL_ENDOFWHOIS(client, nick) (std::string(":ircserver 318 ") + client + " " + nick + " :End of /WHOIS list\r\n")
+#define RPL_WHOREPLY(client, channel, username, host, nick, c_op, realname) (std::string(":ircserver 352 ") + client + " " + channel + " " + username + " " + host + " ircserver " + nick + " H" + c_op + " :0 " + realname + "\r\n")
+#define RPL_ENDOFWHO(client) (std::string(":ircserver 315 ") + client + " :End of WHO list\r\n")
 
 struct parsedCmd {
     std::string cmd;  //command itself
@@ -156,14 +165,16 @@ class CapCommand : public ICommand {
         void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
+std::string getClientAllChannels(Client& targetClient, Client& srcClient, Server& server);
+
 class WhoCommand : public ICommand {
+    private:
+        void showUserInfo(Client& srcClient, Client& targetClient, Server& server, bool isChannel) const;
     public:
         void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
 
 class WhoIsCommand : public ICommand {
-    private:
-        std::string getWhoIsChannels(Client& targetClient, Client& srcClient, Server& server) const;
     public:
         void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };
