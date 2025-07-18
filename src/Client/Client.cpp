@@ -90,8 +90,8 @@ void Client::setLastActivityTime(std::time_t lastActivityTime) {
     _lastActivityTime = lastActivityTime;
 }
 
-void Client::appendRecvData(const std::string& buf) {
-    _recv_buffer += buf;
+void Client::appendRecvData(const char *buf, size_t len) {
+    _recv_buffer += std::string(buf, len);
 }
 
 //This function is for poll main loop POLLIN mostly for execution of cmds
@@ -120,10 +120,12 @@ bool Client::hasData() const {
 }
 
 void Client::queueMessage(const std::string& msg) {
+    // std::cout << "DEBUG: Queueing message: [" << msg << "]" << std::endl;
     
     // bool buff_empty = _send_buffer.empty();
 
     _send_buffer += msg;
+    // std::cout << "DEBUG: Current _send_buffer content: [" << _send_buffer << "]" << std::endl;
     _serv_ref->requestPollOut(_client_fd, true);
     //This is callback for the server to add the event POLLOUT
 }

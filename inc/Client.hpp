@@ -48,7 +48,7 @@ class Client {
         Client(int client_fd, const std::string& hostname, Server* server);
         ~Client();
         //recv functions
-        void appendRecvData(const std::string& buf);
+        void appendRecvData(const char *buf, size_t len);
         std::string extractLineFromRecv();
         //send functions
         bool hasData() const;
