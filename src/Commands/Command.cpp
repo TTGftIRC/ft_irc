@@ -954,18 +954,21 @@ bool isVisible(Client& srcClient, Client& targetClient, bool isChannel, Server& 
     }
 
     if (isChannel) {
-        if (!targetClient.getInvisible()) return true;
-        return false;
+        return true;
     }
 
     std::set<Channel*> allChannels = server.getChannels();
     for (std::set<Channel*>::iterator it = allChannels.begin(); it != allChannels.end(); ++it) {
             if ((*it)->hasClient(targetClient.getNickname()) && 
-            (*it)->hasClient(srcClient.getNickname()) && 
-            !targetClient.getInvisible()) {
+            (*it)->hasClient(srcClient.getNickname())) {
                 return true;
             }
         }
+
+    if (!targetClient.getInvisible()) {
+        return true;
+    }
+    
     return false;
 }
 
