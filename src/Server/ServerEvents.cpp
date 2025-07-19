@@ -60,9 +60,10 @@ int Server::handleNewServConnect(){
 
 bool Server::RecvData(int i, Client *curr){
     char buffer[1024] = {0};
-    ssize_t bytes_read = recv(_poll_fds[i].fd, buffer, sizeof(buffer), 0);                
+    ssize_t bytes_read = recv(_poll_fds[i].fd, buffer, sizeof(buffer), 0);
     if (bytes_read > 0) {
-        curr->appendRecvData(buffer);
+        // std::cout << "recv data: " << buffer << std::endl;
+        curr->appendRecvData(buffer, bytes_read);
         std::string cmd;
         while (!(cmd = curr->extractLineFromRecv()).empty())
             _handleClientMessage(*this, curr, cmd);
@@ -83,27 +84,31 @@ bool Server::RecvData(int i, Client *curr){
 }
 
 bool Server::SendData(int i, Client *curr){
-    if (curr->hasData()) {
-        std::string& data_to_send = curr->getSendBuf();
-        while (curr->hasData()){
-            ssize_t bytes = send(_poll_fds[i].fd, data_to_send.data(), data_to_send.size(), 0);
-            if (bytes == -1){
-                if (errno == EWOULDBLOCK || errno == EAGAIN)//break to avoid busy-wai, socker aint ready to recv more data
-                    break;   
-                else{
-                    std::cerr << "Error: couldn't send msg" << std::endl;
-                    CleanClient(i);
-                    return false;
-                }
-            }
-            curr->helpSenderEvent(bytes);
-            if (!curr->hasData())
-                break;
-            data_to_send = curr->getSendBuf();
-        }
+    if (!curr->hasData()) {
         return true;
     }
-    return false;
+    std::string& data_to_send = curr->getSendBuf();
+
+    // std::cout << "curr->getSendBuf(): " << curr->getSendBuf() << std::endl;
+
+    ssize_t bytes = send(_poll_fds[i].fd, data_to_send.data(), data_to_send.size(), 0);
+
+    // if (bytes > 0) {
+    //     std::cout << "sent " << bytes << " bytes: " << data_to_send.substr(0, bytes) << std::endl;
+    // }
+
+    if (bytes == -1) {
+        if (errno == EWOULDBLOCK || errno == EAGAIN) {
+            return true;
+        }
+        std::cerr << "Could not send data" << std::endl;
+        CleanClient(i);
+        return false;
+    }
+
+    curr->helpSenderEvent(bytes);
+
+    return true;
 }
 
 void Server::HandlePollREvents(){
@@ -118,6 +123,7 @@ void Server::HandlePollREvents(){
             if (!RecvData(i, curr))
             continue;
         } if (_poll_fds[i].revents & POLLOUT) {
+            // std::cout << "DEBUG: POLLOUT detected for client FD: " << _poll_fds[i].fd << std::endl;
             if (!SendData(i, curr))
             continue;                
         }

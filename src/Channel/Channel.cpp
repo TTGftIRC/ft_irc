@@ -32,6 +32,8 @@ std::string Channel::getNameList() const {
     return list;
 }
 
+std::vector<Client*> Channel::getUsers() const { return this->_clients; }
+
 void Channel::setTopic(const std::string& topic, const std::string& setter) {
     this->_topic = topic;
     //optional for server console

@@ -23,6 +23,7 @@
 #include "Channel.hpp"
 #include "Command.hpp"
 #include <csignal>
+#include <ctime>
 
 extern volatile sig_atomic_t sig_recvied;//exter for visab across files
 class Client;
@@ -66,6 +67,7 @@ public:
     void requestPollOut(int client_fd, bool enable);
     void disconnectClient(int client_fd);
     const std::string& getPass();
+    std::vector<Client*> getAllClients() const;
     Server();
     ~Server();
 };
