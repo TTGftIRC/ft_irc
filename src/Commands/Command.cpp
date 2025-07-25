@@ -4,14 +4,7 @@
 ICommand::~ICommand() {}
 
 parsedCmd parseInput(const std::string& input, Client* client) {
-    size_t len = input.length();
-    std::string trimmed;
-    if (len >= 2 && input[len - 2] == '\r' && input[len - 1] == '\n') {
-        trimmed = input.substr(0, len - 2);
-    } else {
-        trimmed = input;
-    }
-    std::istringstream iss(trimmed);
+    std::istringstream iss(input);
     parsedCmd result; //empty struct
     result.srcClient = client; // assigned the source client so the command knows who sent it
 
@@ -457,6 +450,7 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
         std::string partMsg = ":" + sender->getNickname() + "!" + sender->getUsername() 
                                 + "@" + sender->getHostname() + " PART " + channelName + " :" + reason;
         channel->broadcast(partMsg, sender->getNickname());
+        sender->queueMessage(partMsg);
         if (channel->getClientCount() > 0 && channel->getOperatorCount() == 0) {
             Client* newOP = channel->getFirstClient();
                 if (newOP) {
