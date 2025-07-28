@@ -59,6 +59,7 @@ public:
     Channel* getChannel(const std::string& name);
     Channel* getOrCreateChannel(const std::string& name);
     void removeChannel(const std::string& channelName);
+    void CleanAllChannels();
     void handleNewConnection(const std::string& channelName);
     bool addChannel(const std::string& channel);
     // void _handleClientMessage(Client* client, const std::string& cmd);
