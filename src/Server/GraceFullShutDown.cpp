@@ -19,6 +19,14 @@ const std::string& Server::getPass() {
     return _pass;
 }
 
+void Server::CleanAllChannels() {
+     for (std::set<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        delete *it;
+    }
+    _channels.clear();
+}
+
 Server::~Server() {
+    CleanAllChannels();
     CleanAllClients();
 }

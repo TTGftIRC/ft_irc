@@ -8,7 +8,9 @@ Channel::Channel(const std::string& name) : _name(name), _userLimit(0), _inviteO
 Channel::~Channel() {
     std::cout << ORANGE << "Channel " << this->_name << " has been deleted!" << RESET << std::endl;
     _clients.clear();
-    //here only the clients continer should be removed not the clients pointers
+    _operators.clear();
+    _invited.clear();
+    //here only the clients continer should be removed not the clients pointers, bcs the channel doesn't own the client
 }
 
 const std::string& Channel::getName() const { return this->_name; }
