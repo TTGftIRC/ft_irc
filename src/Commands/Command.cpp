@@ -407,7 +407,7 @@ void PrivmsgCommand::infoDCC(const std::string& message) const {
     std::string sizeStr;
 
     if (iss >> filename >> ipStr >> portStr >> sizeStr) {
-        unsigned long ipInt = std::stoul(ipStr);
+        unsigned long ipInt = std::strtoul(ipStr.c_str(), NULL, 10);
         struct in_addr ip_addr;
         ip_addr.s_addr = htonl(ipInt); 
 
@@ -795,9 +795,45 @@ void PingCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
 
 void ModeCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     Client* sender = _parsedCmd.srcClient;
-    if (_parsedCmd.args.size() < 2) {
+    std::string modules = "+";
+    if (_parsedCmd.args.size() < 1) {
         sender->queueMessage(ERR_NEEDMOREPARAMS(sender->getNickname(), _parsedCmd.cmd));
         return;
+    }
+    if (_parsedCmd.args.size() == 1) {
+        if (_parsedCmd.args[0][0] != '#') {
+            Client* target = server.getClientByNick(_parsedCmd.args[0]);
+            if (!target) {
+                sender->queueMessage(ERR_NOSUCHNICK(sender->getNickname(), _parsedCmd.args[0]));
+                return;
+            } else {
+                if (target->getInvisible()) {
+                    modules += "i";
+                }
+                // if (target is op) {
+                //     moduel += "o";
+                // }
+                sender->queueMessage(RPL_UMODEIS(target->getNickname(), modules));
+                return;
+            }
+        } else {
+            std::string modules = "+";
+            Channel* target = server.getChannel(_parsedCmd.args[0]);
+            if (!target) {
+                sender->queueMessage(ERR_NOSUCHCHANNEL(sender->getNickname(), _parsedCmd.args[0]));
+                return;
+            }
+            if (target->isInviteOnly())
+                modules += "i";
+            if (target->hasPassword())
+                modules += "k";
+            if (target->isTopicLocked())
+                modules += "t";
+            if (target->getUserLimit() != 0)
+                modules += "l";
+            sender->queueMessage(RPL_CHANNELMODEIS(sender->getNickname(), target->getName(), modules));
+            return;
+        }
     }
     //mode for client
     if (_parsedCmd.args[0][0] != '#') {

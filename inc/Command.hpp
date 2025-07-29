@@ -48,6 +48,8 @@ std::string toString(T value) {
 #define RPL_ENDOFWHOIS(client, nick) (std::string(":ircserver 318 ") + client + " " + nick + " :End of /WHOIS list\r\n")
 #define RPL_WHOREPLY(client, channel, username, host, nick, c_op, realname) (std::string(":ircserver 352 ") + client + " " + channel + " " + username + " " + host + " ircserver " + nick + " H" + c_op + " :0 " + realname + "\r\n")
 #define RPL_ENDOFWHO(client) (std::string(":ircserver 315 ") + client + " :End of WHO list\r\n")
+#define RPL_UMODEIS(target, flags) (std::string(":ircserver 221 ") + target + " " + flags + "\r\n")
+#define RPL_CHANNELMODEIS(client, channel, flags) (std::string(":ircserver 324 ") + client + " " + channel + " " + flags + "\r\n")
 
 struct parsedCmd {
     std::string cmd;  //command itself
