@@ -65,8 +65,11 @@ bool Server::RecvData(int i, Client *curr){
         std::cout << "recv data: " << buffer << std::endl;
         curr->appendRecvData(buffer, bytes_read);
         std::string cmd;
-        while (!(cmd = curr->extractLineFromRecv()).empty())
-            _handleClientMessage(*this, curr, cmd);
+        while (!(cmd = curr->extractLineFromRecv()).empty()) {
+            if (!_handleClientMessage(*this, curr, cmd)) {
+                return false;
+            }
+        }
         return true;
     } else if (bytes_read == 0) {
         std::cout << "Client has been disconnected !" << std::endl;
@@ -80,7 +83,7 @@ bool Server::RecvData(int i, Client *curr){
             return false;       
         }
     }
-    return true;
+    return false;
 }
 
 bool Server::SendData(int i, Client *curr){
@@ -111,23 +114,32 @@ bool Server::SendData(int i, Client *curr){
     return true;
 }
 
-void Server::HandlePollREvents(){
+void Server::HandlePollREvents() {
     size_t i = 1;
-    while(i < _poll_fds.size()) {
-        Client* curr = _clients[_poll_fds[i].fd];
+    while (i < _poll_fds.size()) {
+        int fd = _poll_fds[i].fd;
+        Client* curr = _clients[fd];
+        bool clientRemoved = false;
+
         if (_poll_fds[i].revents & (POLLHUP | POLLNVAL | POLLERR)) {
             std::cout << "Client has been disconnected !" << std::endl;
             CleanClient(i);
-            continue;
-        } if (_poll_fds[i].revents & POLLIN) {
-            if (!RecvData(i, curr))
-            continue;
-        } if (_poll_fds[i].revents & POLLOUT) {
-            // std::cout << "DEBUG: POLLOUT detected for client FD: " << _poll_fds[i].fd << std::endl;
-            if (!SendData(i, curr))
-            continue;                
+            clientRemoved = true;
+        } else if (_poll_fds[i].revents & POLLIN) {
+            if (!RecvData(i, curr)) {
+                CleanClient(i);
+                clientRemoved = true;
+            }
+        } else if (_poll_fds[i].revents & POLLOUT) {
+            if (!SendData(i, curr)) {
+                CleanClient(i);
+                clientRemoved = true;
+            }
         }
-        ++i;
+
+        if (!clientRemoved) {
+            ++i;
+        }
     }
 }
 

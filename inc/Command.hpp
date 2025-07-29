@@ -78,7 +78,7 @@ enum cmds {
 
 cmds getCommandEnum(const std::string& cmd);
 parsedCmd parseInput(const std::string& input, Client* client);
-void _handleClientMessage(Server& server, Client* client, const std::string& cmd);
+bool _handleClientMessage(Server& server, Client* client, const std::string& cmd);
 class ICommand {
     public:
         virtual ~ICommand();

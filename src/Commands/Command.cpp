@@ -61,7 +61,7 @@ bool isValidChannelName(const std::string& name) {
     return true;
 }
 
-void _handleClientMessage(Server& server, Client* client, const std::string& cmd) {
+bool _handleClientMessage(Server& server, Client* client, const std::string& cmd) {
     parsedCmd parsed = parseInput(cmd, client);
     cmds CommandEnum = getCommandEnum(parsed.cmd);
     if (!client->checkRegistered() && 
@@ -74,7 +74,7 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             std::string clientName = (client->getNickFlag()) ? client->getNickname() : "*";
             std::string errorMsg = ERR_NOTREGISTERED(clientName);
             client->queueMessage(errorMsg);
-            return ;
+            return true;
         }
     if (CommandEnum == PRIVMSG || 
         CommandEnum == JOIN || 
@@ -121,7 +121,7 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
         case QUIT: { // QUIT :reason(optional)
             QuitCommand quitCommand;
             quitCommand.execute(server, parsed);
-            break;
+            return false;
         }
         case KICK: { // KICK #general,#strict tudor,grisha :just because(optional)
             KickCommand kickCommand;
@@ -171,6 +171,7 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             break;
         }
     }
+    return true;
 }
 
 cmds getCommandEnum(const std::string& cmd) {
