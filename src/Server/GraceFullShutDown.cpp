@@ -1,9 +1,15 @@
 #include "../../inc/Server.hpp"
 
-void Server::CleanClient(int i){
+void Server::CleanClient(int i) {
+    if (i >= static_cast<int>(_poll_fds.size()))
+        return;
+
     close(_poll_fds[i].fd);
-    delete _clients[_poll_fds[i].fd];
-    _clients.erase(_poll_fds[i].fd);
+    int fd = _poll_fds[i].fd;
+    if (_clients.count(fd)) {
+        delete _clients[fd];
+        _clients.erase(fd);
+    }
     _poll_fds.erase(_poll_fds.begin() + i);
 }
 

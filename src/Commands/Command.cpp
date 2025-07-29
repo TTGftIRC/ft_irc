@@ -4,14 +4,7 @@
 ICommand::~ICommand() {}
 
 parsedCmd parseInput(const std::string& input, Client* client) {
-    size_t len = input.length();
-    std::string trimmed;
-    if (len >= 2 && input[len - 2] == '\r' && input[len - 1] == '\n') {
-        trimmed = input.substr(0, len - 2);
-    } else {
-        trimmed = input;
-    }
-    std::istringstream iss(trimmed);
+    std::istringstream iss(input);
     parsedCmd result; //empty struct
     result.srcClient = client; // assigned the source client so the command knows who sent it
 
@@ -68,7 +61,7 @@ bool isValidChannelName(const std::string& name) {
     return true;
 }
 
-void _handleClientMessage(Server& server, Client* client, const std::string& cmd) {
+bool _handleClientMessage(Server& server, Client* client, const std::string& cmd) {
     parsedCmd parsed = parseInput(cmd, client);
     cmds CommandEnum = getCommandEnum(parsed.cmd);
     if (!client->checkRegistered() && 
@@ -81,7 +74,7 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             std::string clientName = (client->getNickFlag()) ? client->getNickname() : "*";
             std::string errorMsg = ERR_NOTREGISTERED(clientName);
             client->queueMessage(errorMsg);
-            return ;
+            return true;
         }
     if (CommandEnum == PRIVMSG || 
         CommandEnum == JOIN || 
@@ -128,7 +121,7 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
         case QUIT: { // QUIT :reason(optional)
             QuitCommand quitCommand;
             quitCommand.execute(server, parsed);
-            break;
+            return false;
         }
         case KICK: { // KICK #general,#strict tudor,grisha :just because(optional)
             KickCommand kickCommand;
@@ -178,6 +171,7 @@ void _handleClientMessage(Server& server, Client* client, const std::string& cmd
             break;
         }
     }
+    return true;
 }
 
 cmds getCommandEnum(const std::string& cmd) {
@@ -399,6 +393,39 @@ void PrivmsgCommand::handleChannelMessage(Server& server, Client* sender,
     channel->broadcast(formattedMessage, sender->getNickname());//send the message to all the channel members but the sender
 }
 
+void PrivmsgCommand::infoDCC(const std::string& message) const {
+    if (message.find("DCC SEND") == std::string::npos) {
+        return;
+    }
+
+    size_t pos = message.find("DCC SEND");
+
+    std::istringstream iss(message.substr(pos + 9)); 
+
+    std::string filename;
+    std::string ipStr;
+    std::string portStr;
+    std::string sizeStr;
+
+    if (iss >> filename >> ipStr >> portStr >> sizeStr) {
+        unsigned long ipInt = std::strtoul(ipStr.c_str(), NULL, 10);
+        struct in_addr ip_addr;
+        ip_addr.s_addr = htonl(ipInt); 
+
+        std::string ip = inet_ntoa(ip_addr);
+        int port = std::atoi(portStr.c_str());
+        int size = std::atoi(sizeStr.c_str());
+
+        std::cout << "DCC SEND Request:\n";
+        std::cout << "- File: " << filename << "\n";
+        std::cout << "- IP: " << ip << "\n";
+        std::cout << "- Port: " << port << "\n";
+        std::cout << "- Size: " << size << " bytes\n";
+    } else {
+        std::cerr << "error in DCC SEND message\n";
+    }
+}
+
 void PrivmsgCommand::handlePrivateMessage(Server& server, Client* sender,
                                             const std::string& targetNick,
                                             const std::string& message) const {
@@ -407,6 +434,9 @@ void PrivmsgCommand::handlePrivateMessage(Server& server, Client* sender,
     if (target == NULL) {
         sender->queueMessage(ERR_NOSUCHNICK(sender->getNickname(), targetNick));
         return;
+    }
+    if (message.find("\x01" "DCC SEND") != std::string::npos) {
+        infoDCC(message);
     }
     // Format: :<sender_nick>!<user>@<host> PRIVMSG <target_nick> :<message>
     std::string formattedMessage = ":" + sender->getNickname() + "!" + sender->getUsername() + 
@@ -457,6 +487,7 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
         std::string partMsg = ":" + sender->getNickname() + "!" + sender->getUsername() 
                                 + "@" + sender->getHostname() + " PART " + channelName + " :" + reason;
         channel->broadcast(partMsg, sender->getNickname());
+        sender->queueMessage(partMsg);
         if (channel->getClientCount() > 0 && channel->getOperatorCount() == 0) {
             Client* newOP = channel->getFirstClient();
                 if (newOP) {
@@ -990,18 +1021,21 @@ bool isVisible(Client& srcClient, Client& targetClient, bool isChannel, Server& 
     }
 
     if (isChannel) {
-        if (!targetClient.getInvisible()) return true;
-        return false;
+        return true;
     }
 
     std::set<Channel*> allChannels = server.getChannels();
     for (std::set<Channel*>::iterator it = allChannels.begin(); it != allChannels.end(); ++it) {
             if ((*it)->hasClient(targetClient.getNickname()) && 
-            (*it)->hasClient(srcClient.getNickname()) && 
-            !targetClient.getInvisible()) {
+            (*it)->hasClient(srcClient.getNickname())) {
                 return true;
             }
         }
+
+    if (!targetClient.getInvisible()) {
+        return true;
+    }
+    
     return false;
 }
 
