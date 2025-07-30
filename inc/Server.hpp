@@ -25,7 +25,7 @@
 #include <csignal>
 #include <ctime>
 
-extern volatile sig_atomic_t sig_recvied;//exter for visab across files
+extern volatile sig_atomic_t sig_received;//exter for visab across files
 class Client;
 class Channel;
 

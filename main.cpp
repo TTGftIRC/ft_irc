@@ -1,7 +1,7 @@
 #include "inc/Server.hpp"
 #include "inc/Command.hpp"
 
-volatile sig_atomic_t sig_recvied = 0;
+volatile sig_atomic_t sig_received = 0;
 
 bool isNum(const char* input) {
     for (size_t i = 0; input[i] != '\0'; i++) {
@@ -12,11 +12,9 @@ bool isNum(const char* input) {
     return true;
 }
 
-void handle_sig(int signal)
-{
+void handle_sig(int signal) {
     (void)signal;
-    sig_recvied = 1;
-    exit(EXIT_SUCCESS);
+    sig_received = 1;
 }
 
 int main(int ac, char **av) {
