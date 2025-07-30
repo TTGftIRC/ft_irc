@@ -4,12 +4,19 @@ void Server::CleanClient(int i) {
     if (i >= static_cast<int>(_poll_fds.size()))
         return;
 
-    close(_poll_fds[i].fd);
     int fd = _poll_fds[i].fd;
+
     if (_clients.count(fd)) {
-        delete _clients[fd];
+        Client* client = _clients[fd];
+        for (std::set<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+            (*it)->removeClient(client->getNickname());
+        }
+
+        delete client;
         _clients.erase(fd);
     }
+
+    close(fd);
     _poll_fds.erase(_poll_fds.begin() + i);
 }
 

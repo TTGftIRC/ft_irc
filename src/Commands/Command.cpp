@@ -171,6 +171,11 @@ bool _handleClientMessage(Server& server, Client* client, const std::string& cmd
             break;
         }
     }
+    if (parsed.srcClient->checkRegistered() && !parsed.srcClient->getWelcomeMsg()) {
+        parsed.srcClient->setSigOnTime(std::time(NULL));
+        parsed.srcClient->setWelcomeMsg(true);
+        parsed.srcClient->queueMessage(RPL_WELCOME(parsed.srcClient->getNickname(), parsed.srcClient->getUsername(), parsed.srcClient->getHostname()));
+    }
     return true;
 }
 
@@ -297,11 +302,6 @@ void UserCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
     _parsedCmd.srcClient->setUsername(username);
     _parsedCmd.srcClient->setRealname(realname);
     _parsedCmd.srcClient->setUserFlag(true);
-
-    if (_parsedCmd.srcClient->checkRegistered()) {
-        _parsedCmd.srcClient->setSigOnTime(std::time(NULL));
-        _parsedCmd.srcClient->queueMessage(RPL_WELCOME(_parsedCmd.srcClient->getNickname(), _parsedCmd.srcClient->getUsername(), _parsedCmd.srcClient->getHostname()));
-    }
 }
 
 //PRIVMSG

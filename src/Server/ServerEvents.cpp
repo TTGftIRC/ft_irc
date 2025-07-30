@@ -17,15 +17,15 @@ int Server::listenPoll(struct pollfd *fds, nfds_t nfds, int timeout){
     int poll_ret = 0;
     while (true){
         poll_ret = poll(fds, nfds, timeout);
-        if (poll_ret == -1 && errno == EINTR){
-            continue;
+        if (poll_ret == -1) {
+            if (errno == EINTR) {
+                if (sig_received) return -1;
+                continue;
+            } else {
+                return -1;
+            }
         }
-        else if (poll_ret == -1){
-            std::cerr << "Error: poll has failed" << std::endl;
-            exit(EXIT_FAILURE);
-        }
-        else
-            break;
+        break;
     }
     return poll_ret;
 }
@@ -148,9 +148,17 @@ void Server::runPoll() {
     server_fd.fd = _listening_socket;
     server_fd.events = POLLIN;
     server_fd.revents = 0;
+    const int timeout_ms = 100;
     _poll_fds.push_back(server_fd); // first elem of the pollfd will be the server which will be waiting for new events
-    while (!sig_recvied) {
-        listenPoll(_poll_fds.data(), _poll_fds.size(), -1);
+    while (!sig_received) {
+        int ret =listenPoll(_poll_fds.data(), _poll_fds.size(), timeout_ms);
+        if (ret < 0) {
+            if (errno == EINTR && sig_received) {
+                break;
+            }
+            std::cerr << "Error: poll has failed" << std::endl;
+            break;
+        }
         if (_poll_fds[0].revents & POLLIN) {
             if (_poll_fds[0].fd == _listening_socket) {
                 // handle new client conexions

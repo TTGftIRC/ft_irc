@@ -17,6 +17,7 @@ class Client {
         bool _nickFlag;
         bool _userFlag;
         bool _invisible;
+        bool _welcomeMsg;
         std::time_t _signOnTime;
         std::time_t _lastActivityTime;
     public:
@@ -31,6 +32,7 @@ class Client {
         bool getNickFlag(void) const;
         bool getUserFlag(void) const;
         bool getInvisible(void) const;
+        bool getWelcomeMsg(void) const;
         std::time_t getSignOnTime(void) const;
         std::time_t getIdleTime(void) const;
 
@@ -42,6 +44,7 @@ class Client {
         void setNickFlag(bool flag);
         void setUserFlag(bool flag);
         void setInvisible(bool flag);
+        void setWelcomeMsg(bool flag);
         void setSigOnTime(std::time_t signOnTime);
         void setLastActivityTime(std::time_t lastActivityTime);
 

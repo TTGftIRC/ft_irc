@@ -2,7 +2,7 @@
 #include "../../inc/Channel.hpp"
 #include "../../inc/Server.hpp"
 
-Client::Client(int client_fd, const std::string& hostname, Server* server) : _serv_ref(server), _client_fd(client_fd), _hostname(hostname), _authorized(false), _nickFlag(false), _userFlag(false), _invisible(false) {
+Client::Client(int client_fd, const std::string& hostname, Server* server) : _serv_ref(server), _client_fd(client_fd), _hostname(hostname), _authorized(false), _nickFlag(false), _userFlag(false), _invisible(false), _welcomeMsg(false) {
     std::cout << "new client connection " << _client_fd << std::endl;
 }
 
@@ -46,6 +46,10 @@ bool Client::getInvisible(void) const {
     return _invisible;
 }
 
+bool Client::getWelcomeMsg(void) const {
+    return _welcomeMsg;
+}
+
 std::time_t Client::getSignOnTime(void) const {
     return _signOnTime;
 }
@@ -80,6 +84,10 @@ void Client::setUserFlag(bool flag) {
 
 void Client::setInvisible(bool flag) {
     _invisible = flag;
+}
+
+void Client::setWelcomeMsg(bool flag) {
+    _welcomeMsg = flag;
 }
 
 void Client::setSigOnTime(std::time_t signOnTime) {
