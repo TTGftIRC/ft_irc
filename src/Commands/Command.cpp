@@ -46,7 +46,7 @@ std::vector<std::string> splitByComma(const std::string& arg) {
 
 bool isValidChannelName(const std::string& name) {
     char prefix = name[0];
-    if (prefix != '#' && prefix != '!' && prefix != '+' && prefix != '@') {
+    if (prefix != '#') {
         return false;
     }
     for (size_t i = 0; i < name.length(); ++i) {
@@ -811,9 +811,9 @@ void ModeCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
                 if (target->getInvisible()) {
                     modules += "i";
                 }
-                // if (target is op) {
-                //     moduel += "o";
-                // }
+                if (server.isOpOnAnyChannel(_parsedCmd.args[0])) {
+                    modules += "o";
+                }
                 sender->queueMessage(RPL_UMODEIS(target->getNickname(), modules));
                 return;
             }

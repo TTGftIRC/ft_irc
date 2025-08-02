@@ -46,3 +46,12 @@ void Server::removeChannel(const std::string& channelName) {
 }
 
 std::set<Channel*> Server::getChannels() const { return _channels; }
+
+
+bool Server::isOpOnAnyChannel(const std::string& nick) const {
+    for (std::set<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        if ((*it)->isOperator(nick))
+            return true;
+    }
+    return false;
+}

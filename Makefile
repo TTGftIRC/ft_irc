@@ -1,4 +1,4 @@
-NAME = ircserve
+NAME = ircserv
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -Iinclude -g
 SRCS = main.cpp src/Client/Client.cpp src/Commands/Command.cpp src/Channel/Channel.cpp src/Server/StartServer.cpp \
@@ -20,6 +20,9 @@ all: $(NAME)
 $(NAME): $(OBJS)
 	@$(CXX) $(CXXFLAGS) -o $(NAME) $(OBJS)
 	@echo "$(GREEN)✔ Successfully compiled $(NAME)$(RESET)"
+
+irc_bot: bot/irc_bot.cpp
+	$(CXX) -std=c++98 -Wall -Wextra -o irc_bot bot/irc_bot.cpp
 
 clean:
 	rm -rf obj
