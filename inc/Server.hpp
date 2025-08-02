@@ -69,6 +69,7 @@ public:
     void disconnectClient(int client_fd);
     const std::string& getPass();
     std::vector<Client*> getAllClients() const;
+    bool isOpOnAnyChannel(const std::string& nick) const;
     Server();
     ~Server();
 };

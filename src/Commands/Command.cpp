@@ -811,9 +811,9 @@ void ModeCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
                 if (target->getInvisible()) {
                     modules += "i";
                 }
-                // if (target is op) {
-                //     moduel += "o";
-                // }
+                if (server.isOpOnAnyChannel(_parsedCmd.args[0])) {
+                    modules += "o";
+                }
                 sender->queueMessage(RPL_UMODEIS(target->getNickname(), modules));
                 return;
             }
