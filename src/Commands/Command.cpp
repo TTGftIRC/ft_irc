@@ -46,7 +46,7 @@ std::vector<std::string> splitByComma(const std::string& arg) {
 
 bool isValidChannelName(const std::string& name) {
     char prefix = name[0];
-    if (prefix != '#' && prefix != '!' && prefix != '+' && prefix != '@') {
+    if (prefix != '#') {
         return false;
     }
     for (size_t i = 0; i < name.length(); ++i) {

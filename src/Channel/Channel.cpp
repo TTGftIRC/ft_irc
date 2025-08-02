@@ -134,7 +134,7 @@ bool Channel::isFull() const {
     return (_clients.size() >= _userLimit); 
 }
 
-bool Channel::hasPassword() const { return _password.empty(); }
+bool Channel::hasPassword() const { return !_password.empty(); }
 
 bool Channel::verifyPassword(const std::string& password) const {
     return _password == password;
