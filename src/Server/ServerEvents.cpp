@@ -18,12 +18,7 @@ int Server::listenPoll(struct pollfd *fds, nfds_t nfds, int timeout){
     while (true){
         poll_ret = poll(fds, nfds, timeout);
         if (poll_ret == -1) {
-            if (errno == EINTR) {
-                if (sig_received) return -1;
-                continue;
-            } else {
-                return -1;
-            }
+            return -1;
         }
         break;
     }
@@ -42,20 +37,15 @@ void Server::AddToPollStrct(int new_socket, sockaddr_in client_addr){
     _poll_fds.push_back(new_conexion);
 }
 
-int Server::handleNewServConnect(){
+void Server::handleNewServConnect(){
     sockaddr_in client_addr;
     socklen_t addr_len = sizeof(client_addr);
     int new_socket = accept(_poll_fds[0].fd, reinterpret_cast<sockaddr *>(&client_addr), &addr_len);
     if (new_socket == -1){
-        if (errno == EWOULDBLOCK || errno == EAGAIN)
-            return (-1);
-        else{
-            std::cerr << "Error: accept has failed" << std::endl;
-            exit(EXIT_FAILURE);
-        }
+        std::cerr << "Error: accept has failed" << std::endl;
+        return;
     }
     AddToPollStrct(new_socket, client_addr);
-    return(42);
 }
 
 bool Server::RecvData(int i, Client *curr){
@@ -76,12 +66,8 @@ bool Server::RecvData(int i, Client *curr){
         CleanClient(i);
         return false;
     } else if(bytes_read == -1){
-        if (errno == EWOULDBLOCK || errno == EAGAIN)
-            return true;
-        else{
-            CleanClient(i);
-            return false;       
-        }
+        CleanClient(i);
+        return false;
     }
     return false;
 }
@@ -101,9 +87,6 @@ bool Server::SendData(int i, Client *curr){
     // }
 
     if (bytes == -1) {
-        if (errno == EWOULDBLOCK || errno == EAGAIN) {
-            return true;
-        }
         std::cerr << "Could not send data" << std::endl;
         CleanClient(i);
         return false;
@@ -162,8 +145,7 @@ void Server::runPoll() {
         if (_poll_fds[0].revents & POLLIN) {
             if (_poll_fds[0].fd == _listening_socket) {
                 // handle new client conexions
-                if(handleNewServConnect() == -1)
-                    continue;
+                handleNewServConnect();
             }
         }
         HandlePollREvents();
