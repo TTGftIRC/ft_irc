@@ -29,6 +29,7 @@ clean:
 	@echo "$(RED)✔ Successfully cleaned object files$(RED)$(RESET)"
 fclean: clean
 	@rm -f $(NAME)
+	@rm -f irc_bot
 	@echo "$(RED)✔ Successfully cleaned executable $(RED)$(RESET)"
 
 re: fclean all
