@@ -46,7 +46,7 @@ std::vector<std::string> splitByComma(const std::string& arg) {
 
 bool isValidChannelName(const std::string& name) {
     char prefix = name[0];
-    if (prefix != '#') {
+    if (prefix != '#' && prefix != '!' && prefix != '+' && prefix != '@') {
         return false;
     }
     for (size_t i = 0; i < name.length(); ++i) {
@@ -387,10 +387,13 @@ void PrivmsgCommand::handleChannelMessage(Server& server, Client* sender,
         return;
     }
     // Format: :<sender_nick>!<user>@<host> PRIVMSG <channel> :<message>    
-    std::string formattedMessage = ":" + sender->getNickname() + "!" + sender->getUsername() +
+    std::string prefix = ":" + sender->getNickname() + "!" + sender->getUsername() +
                                     "@" + sender->getHostname() + " PRIVMSG " + 
-                                    channelName + " :" + message + "\r\n";
-    channel->broadcast(formattedMessage, sender->getNickname());//send the message to all the channel members but the sender
+                                    channelName + " :";
+    std::vector<std::string> messages = splitMessage(prefix, message);
+    for (size_t i = 0; i < messages.size(); i++) {
+        channel->broadcast(messages[i], sender->getNickname());//send the message to all the channel members but the sender
+    }
 }
 
 void PrivmsgCommand::infoDCC(const std::string& message) const {
@@ -426,6 +429,21 @@ void PrivmsgCommand::infoDCC(const std::string& message) const {
     }
 }
 
+std::vector<std::string> PrivmsgCommand::splitMessage(const std::string& prefix, const std::string& message) const {
+    const size_t IRC_MAX_SIZE = 512;
+    std::vector<std::string> messages;
+
+    size_t message_max_size = IRC_MAX_SIZE - prefix.size() - 2;
+    size_t pos = 0;
+    while (pos < message.size()) {
+        size_t len = std::min(message_max_size, message.size() - pos);
+        messages.push_back(prefix + message.substr(pos, len) + "\r\n");
+        pos += len;
+    }
+
+    return messages;
+}
+
 void PrivmsgCommand::handlePrivateMessage(Server& server, Client* sender,
                                             const std::string& targetNick,
                                             const std::string& message) const {
@@ -439,10 +457,13 @@ void PrivmsgCommand::handlePrivateMessage(Server& server, Client* sender,
         infoDCC(message);
     }
     // Format: :<sender_nick>!<user>@<host> PRIVMSG <target_nick> :<message>
-    std::string formattedMessage = ":" + sender->getNickname() + "!" + sender->getUsername() + 
+    std::string prefix = ":" + sender->getNickname() + "!" + sender->getUsername() + 
                                     "@" + sender->getHostname() + " PRIVMSG " + 
-                                    targetNick + " :" + message + "\r\n";
-    target->queueMessage(formattedMessage);
+                                    targetNick + " :";
+    std::vector<std::string> messages = splitMessage(prefix, message);
+    for (size_t i = 0; i < messages.size(); i++) {
+        target->queueMessage(messages[i]);
+    }
 }
 
 //PART
@@ -811,9 +832,9 @@ void ModeCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
                 if (target->getInvisible()) {
                     modules += "i";
                 }
-                if (server.isOpOnAnyChannel(_parsedCmd.args[0])) {
-                    modules += "o";
-                }
+                // if (target is op) {
+                //     moduel += "o";
+                // }
                 sender->queueMessage(RPL_UMODEIS(target->getNickname(), modules));
                 return;
             }

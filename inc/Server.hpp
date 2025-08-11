@@ -48,7 +48,7 @@ public:
     void startListen();
     void runPoll();
     int listenPoll(struct pollfd *fds, nfds_t nfds, int timeout);
-    int handleNewServConnect();
+    void handleNewServConnect();
     void CleanClient(int i);
     bool RecvData(int i, Client *curr);
     bool SendData(int i, Client *curr);

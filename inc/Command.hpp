@@ -124,6 +124,7 @@ private:
     void handlePrivateMessage(Server& server, Client* sender, const std::string& targetNickname , const std::string& message) const;
     std::vector<std::string> parseTargets(const std::string& targetsString) const;
     void infoDCC(const std::string& message) const;
+    std::vector<std::string> splitMessage(const std::string& prefix, const std::string& message) const;
 public:
     void execute(Server& server, const parsedCmd& _parsedCmd) const;
 };

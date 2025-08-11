@@ -116,6 +116,12 @@ std::string Client::extractLineFromRecv() {
     size_t end = _recv_buffer.find("\n");
     if (end != std::string::npos) {
         std::string res = _recv_buffer.substr(0, end);
+        // if (res.length() > 512) {
+        //     std::cerr << "Error: Received oversized line (" << res.length() << " bytes). Discarding." << std::endl;
+        //     _recv_buffer.erase(0, end + 1);
+        //     queueMessage(":ircserver 417 " + getNickname() + " :Input line too long\r\n");
+        //     return "";
+        // }
         if (!res.empty() && res[res.length() - 1] == '\r') {
             res = res.substr(0, res.length() - 1);
         }
