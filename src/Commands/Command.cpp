@@ -143,6 +143,15 @@ bool _handleClientMessage(Server& server, Client* client, const std::string& cmd
             modeCommand.execute(server, parsed);
             break;
         }
+        /*
+        | Mode | Command to Enable      | Command to Disable      |
+|------|-----------------------|------------------------|
+| i    | MODE #chan +i         | MODE #chan -i          |
+| k    | MODE #chan +k pass    | MODE #chan -k          |
+| o    | MODE #chan +o nick    | MODE #chan -o nick     |
+| l    | MODE #chan +l 5       | MODE #chan -l          |
+| t    | MODE #chan +t         | MODE #chan -t          |
+        */
         case PING: {
             PingCommand pingCommand;
             pingCommand.execute(server, parsed);
