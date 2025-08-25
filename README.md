@@ -106,7 +106,7 @@ JOIN #mychannel
 
 ---
 
-## 🏆 Bonus Ideas
+## 🏆 Implemented Bonus Ideas
 
 - File transfer support
 - IRC bot functionality
