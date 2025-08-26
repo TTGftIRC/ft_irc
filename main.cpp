@@ -24,7 +24,7 @@ int main(int ac, char **av) {
     std::signal(SIGTERM, handle_sig);
 
     if (ac != 3) {
-        std::cerr << "Error: invalid amount of arguments: try ./irc PORT PASSWORD" << std::endl;
+        std::cerr << "Error: invalid amount of arguments: try ./ircserv PORT PASSWORD" << std::endl;
         return 1;
     }
     pass = av[2];

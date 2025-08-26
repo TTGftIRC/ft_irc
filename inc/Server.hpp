@@ -18,7 +18,6 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <set>
-#include <cstring>
 #include "Client.hpp"
 #include "Channel.hpp"
 #include "Command.hpp"
