@@ -21,8 +21,9 @@ class Bot {
         std::string _recv_buffer;
         bool initBot();
         void loopBot();
-        bool loginBot();
+        void loginBot();
         void sendMessage(const std::string& msg);
+        void handleMessage(std::string line);
     public:
         class SuperException : public std::exception {
             private:

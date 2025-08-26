@@ -23,6 +23,7 @@ int main(int ac, char **av) {
 
     if (ac != 3) {
         std::cerr << "Erorr: invalid amount of arguments: try ./bot PORT PASSWORD" << std::endl;
+        return 1;
     }
     pass = av[2];
     port = std::atoi(av[1]);
@@ -31,5 +32,11 @@ int main(int ac, char **av) {
         return 1;
     }
 
-    Bot bot(port, pass);
+    try {
+        Bot bot(port, pass);
+    } catch (const std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        return 1;
+    }
+    return 0;
 }
