@@ -25,8 +25,20 @@ void Bot::loginBot() {
     sendMessage("USER bot42 0 * :");
 }
 
+void Bot::makeNonBlock() {
+    int flags = fcntl(_socket, F_GETFL, 0);
+    if (flags == -1) {
+        throw SuperException("fcntl F_GETFL");
+        return;
+    }
+    if (fcntl(_socket, F_SETFL, flags | O_NONBLOCK) == -1) {
+        throw SuperException("fcntl F_SETFL");
+    }
+}
+
 bool Bot::initBot() {
     _socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (_socket < 0) throw SuperException("Failed to create socket");
     struct hostent* server = gethostbyname("127.0.0.1");
     if (!server) {
         throw SuperException("No such host");
@@ -41,6 +53,8 @@ bool Bot::initBot() {
         throw SuperException("Unable to connect");
         return false;
     }
+    makeNonBlock();
+    loginBot();
     return true;
 }
 
@@ -63,15 +77,14 @@ void Bot::loopBot() {
             _recv_buffer.erase(0, pos + 2);
 
             std::cout << "recieved data: " << line << std::endl;
-            if (login) {
-                loginBot();
+
+            if (login == 1) {
                 if (line.find(":ircserver 464") != std::string::npos) {
                     throw SuperException("Incorrect password");
                     return;
                 } else if (line.find(":ircserver 001") != std::string::npos) {
-                    continue;
+                    login = 0;
                 }
-                login--;
             }
             handleMessage(line);
         }

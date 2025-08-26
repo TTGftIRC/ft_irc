@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <csignal>
+#include <fcntl.h>
 
 #define MAX_SIZE 512
 extern volatile sig_atomic_t sig_recieved;
@@ -22,6 +23,7 @@ class Bot {
         bool initBot();
         void loopBot();
         void loginBot();
+        void makeNonBlock();
         void sendMessage(const std::string& msg);
         void handleMessage(std::string line);
     public:
