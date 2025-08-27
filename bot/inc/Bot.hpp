@@ -11,8 +11,14 @@
 #include <csignal>
 #include <fcntl.h>
 #include <poll.h>
+#include <sstream>
 
 #define MAX_SIZE 512
+
+struct parsedMsg{
+    std::string clientNick; //the client's nick (which is talking to the bot)
+    std::string command; // !help, !time, etc.
+};
 
 enum cmds {
     HELP,
@@ -22,6 +28,9 @@ enum cmds {
     COIN,
     UNKNOWN
 };
+
+cmds getCommandEnum(std::string message);
+parsedMsg parseLine(const std::string& line);
 
 class Bot {
     private:
@@ -34,7 +43,6 @@ class Bot {
         void loopBot();
         void loginBot();
         void makeNonBlock();
-        cmds getCommandEnum(std::string message);
         void sendMessage(const std::string& msg);
         void handleMessage(std::string line);
     public:

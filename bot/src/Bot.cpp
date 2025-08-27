@@ -58,13 +58,27 @@ bool Bot::initBot() {
     return true;
 }
 
-cmds Bot::getCommandEnum(std::string message) {
+cmds getCommandEnum(std::string message) {
     if (message == "!help") return HELP;
     if (message == "!hello") return HELLO;
     if (message == "!time") return TIME;
     if (message == "!dice") return DICE;
     if (message == "!coin") return COIN;
     return UNKNOWN;
+}
+
+parsedMsg parseLine(const std::string& line) {
+    std::istringstream iss(line);
+    parsedMsg result; // empty struct
+    std::string token;
+    while (iss >> token) {
+        if (token[0] == '!') {
+            result.command = token;
+            break;
+        }
+        result.clientNick = token;
+    }
+    return result;
 }
 
 void Bot::handleMessage(std::string line) {
@@ -77,15 +91,32 @@ void Bot::handleMessage(std::string line) {
     if ((pos = line.find("PRIVMSG")) == std::string::npos) {
         return;
     }
-    std::string messages[];
+    std::string message;
 
-    message = line.substr(pos + 9, line.length());
-    if ((pos = message.find("!")) != std::string::npos) {
-        cmds command = getCommandEnum(message);
-        switch (command) {
-            case HELP: {
-                
-            }
+    message = line.substr(pos + 7, line.length());
+    parsedMsg parsed = parseLine(message);
+    cmds CommandEnum = getCommandEnum(parsed.command);
+    switch (CommandEnum) {
+        case HELP: {
+            break;
+        }
+        case HELLO: {
+            break;
+        }
+        case TIME: {
+            break;
+        }
+        case DICE: {
+            break;
+        }
+        case COIN: {
+            break;
+        }
+        case UNKNOWN: {
+            break;
+        }
+        default: {
+            break;
         }
     }
 }
