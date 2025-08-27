@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <sstream>
+#include <ctime>
 
 #define MAX_SIZE 512
 
@@ -39,6 +40,7 @@ class Bot {
         std::string _pass;
         int _socket;
         std::string _recv_buffer;
+        std::string intToStr(int num);
         bool initBot();
         void loopBot();
         void loginBot();

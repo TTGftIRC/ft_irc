@@ -6,6 +6,12 @@ Bot::SuperException::~SuperException() throw() {}
 
 const char* Bot::SuperException::what() const throw() { return msg.c_str(); }
 
+std::string Bot::intToStr(int num) {
+    std::stringstream stream;
+	stream << num;
+	return stream.str();
+}
+
 Bot::Bot(int port, std::string pass, bool *sig) : _sig(sig), _port(port), _pass(pass), _socket(-1) {
     if (initBot()) {
         loopBot();
@@ -73,24 +79,6 @@ cmds getCommandEnum(std::string message) {
     return UNKNOWN;
 }
 
-// parsedMsg parseLine(const std::string& line) {
-//     std::istringstream iss(line);
-//     parsedMsg result; // empty struct
-//     std::string token;
-//     while (iss >> token) {
-//         if (token[0] == '!') {
-//             result.command = token;
-//             break;
-//         } else {
-//             if (result.clientNick.empty()) {
-//                 result.clientNick = token;
-//             }
-//         }
-        
-//     }
-//     return result;
-// }
-
 parsedMsg parseLine(const std::string& line) {
     parsedMsg result;
     if (line.size() > 0 && line[0] == ':') {
@@ -130,7 +118,12 @@ void Bot::handleMessage(std::string line) {
     cmds CommandEnum = getCommandEnum(parsed.command);
     switch (CommandEnum) {
         case HELP: {
-            
+            sendMsgToClient("Usage of Bot42:", parsed.clientNick);
+            sendMsgToClient("!hello    -     Says hello message to you.", parsed.clientNick);
+            sendMsgToClient("!time     -     Shows current local time.", parsed.clientNick);
+            sendMsgToClient("!dice     -     Throws a dice", parsed.clientNick);
+            sendMsgToClient("!coin     -     Throws a coin", parsed.clientNick);
+            sendMsgToClient("Try to use my commands!", parsed.clientNick);
             break;
         }
         case HELLO: {
@@ -138,13 +131,21 @@ void Bot::handleMessage(std::string line) {
             break;
         }
         case TIME: {
-
+            std::time_t now = std::time(NULL);
+            std::string curr_time = std::ctime(&now);
+            if (!curr_time.empty() && curr_time[curr_time.size() - 1] == '\n') {
+                curr_time.erase(curr_time.size() - 1);
+            }
+            sendMsgToClient("Current time: " + curr_time, parsed.clientNick);
             break;
         }
         case DICE: {
+            sendMsgToClient("Throwing a dice... " + intToStr(rand() % 6 + 1), parsed.clientNick);
             break;
         }
         case COIN: {
+            std::string result = (rand() % 2 == 0) ? "heads" : "tails";
+            sendMsgToClient("Flipping a coin... " + result, parsed.clientNick);
             break;
         }
         case UNKNOWN: {
