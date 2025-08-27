@@ -6,7 +6,7 @@ Bot::SuperException::~SuperException() throw() {}
 
 const char* Bot::SuperException::what() const throw() { return msg.c_str(); }
 
-Bot::Bot(int port, std::string pass) : _port(port), _pass(pass), _socket(-1) {
+Bot::Bot(int port, std::string pass, bool *sig) : _sig(sig), _port(port), _pass(pass), _socket(-1) {
     if (initBot()) {
         loopBot();
     }
@@ -67,26 +67,46 @@ void Bot::loopBot() {
     char buf[MAX_SIZE + 1] = {0};
     static int login = 1;
 
-    while (!sig_recieved) {
-        size_t bytes = recv(_socket, buf, sizeof(buf) - 1, 0);
-        if (bytes <= 0) break;
-        _recv_buffer += std::string(buf, strlen(buf));
-        size_t pos;
-        while ((pos = _recv_buffer.find("\r\n")) != std::string::npos) {
-            std::string line = _recv_buffer.substr(0, pos);
-            _recv_buffer.erase(0, pos + 2);
+    struct pollfd pfd;
+    pfd.fd = _socket;
+    pfd.events = POLLIN;
+    pfd.revents = 0;
 
-            std::cout << "recieved data: " << line << std::endl;
-
-            if (login == 1) {
-                if (line.find(":ircserver 464") != std::string::npos) {
-                    throw SuperException("Incorrect password");
-                    return;
-                } else if (line.find(":ircserver 001") != std::string::npos) {
-                    login = 0;
-                }
+    while (!*_sig) {
+        int ret = poll(&pfd, 1, -1);
+        if (ret < 0) {
+            if (errno == EINTR) continue;
+            throw SuperException("poll() failed");
+        }
+        if (pfd.revents & POLLIN) {
+            ssize_t bytes = recv(_socket, buf, sizeof(buf) - 1, 0);
+            if (bytes < 0) {
+                throw SuperException("recv() failed");
             }
-            handleMessage(line);
+            if (bytes == 0) {
+                std::cerr << "Server closed connection." << std::endl;
+                break;
+            }
+
+            buf[bytes] = '\0';
+            _recv_buffer.append(buf, bytes);
+            size_t pos;
+            while ((pos = _recv_buffer.find("\r\n")) != std::string::npos) {
+                std::string line = _recv_buffer.substr(0, pos);
+                _recv_buffer.erase(0, pos + 2);
+    
+                std::cout << "recieved data: " << line << std::endl;
+    
+                if (login == 1) {
+                    if (line.find(":ircserver 464") != std::string::npos) {
+                        throw SuperException("Incorrect password");
+                        return;
+                    } else if (line.find(":ircserver 001") != std::string::npos) {
+                        login = 0;
+                    }
+                }
+                handleMessage(line);
+            }
         }
     }
 }

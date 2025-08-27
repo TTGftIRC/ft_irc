@@ -10,12 +10,13 @@
 #include <cstdlib>
 #include <csignal>
 #include <fcntl.h>
+#include <poll.h>
 
 #define MAX_SIZE 512
-extern volatile sig_atomic_t sig_recieved;
 
 class Bot {
     private:
+        bool *_sig;
         int _port;
         std::string _pass;
         int _socket;
@@ -35,7 +36,7 @@ class Bot {
                 virtual ~SuperException() throw();
                 const char* what() const throw();
         };
-        Bot(int port, std::string pass);
+        Bot(int port, std::string pass, bool *sig);
         ~Bot();
 };
 

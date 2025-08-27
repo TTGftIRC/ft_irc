@@ -1,6 +1,6 @@
 #include "inc/Bot.hpp"
 
-volatile sig_atomic_t sig_recieved = 0;
+bool sig_recieved = false;
 
 bool isNum(const char* input) {
     for (size_t i = 0; input[i] != '\0'; i++) {
@@ -13,7 +13,7 @@ bool isNum(const char* input) {
 
 void handle_sig(int signal) {
     (void)signal;
-    sig_recieved = 1;
+    sig_recieved = true;
 }
 
 int main(int ac, char **av) {
@@ -33,7 +33,7 @@ int main(int ac, char **av) {
     }
 
     try {
-        Bot bot(port, pass);
+        Bot bot(port, pass, &sig_recieved);
     } catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;
         return 1;
