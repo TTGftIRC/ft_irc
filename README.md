@@ -1,66 +1,130 @@
+# ft_irc
 
-# How to use git for group projects (ft_irc)
-
-Is allways best practice to check the current branch before doing anything regarding git, in order to do 
-that we need the following command :
-
----
-```javascript
-1.git branch -a                                //green represents the current branch
-```
----
-
-
-How do we combine two different branches
--
-
-1.Pushing on the desired branch (the one you work on):
-```javascript
-1.git add file.ex
-2.git commit -m "message"
-3.git push
-```
-2.Switching to the Master branch by running:
-```javascript
-git switch branch_name
-or 
-git checkout branch_name                //Only if the current branch has been pushed, else it delets everything
-```
-3.Before merging it's very important to PULL first, to ensure that no remote changes!!!(That's how merge conflicts begin)!!! were done to the Master branch:
-```javascript
-git pull
-```
-4.Now it's time for the merge, since there might be conflicts (Allways check, the green screen represents current branch commit, and blue for the upcoming commit).  Before accepting the changes make sure everythin is fine:
-```javascript
-git merge desired_branch
-```
-
----
-How to recover
--
-So in case the ,merge went wrong, and the Master Branch lost important work, you can allways go back to the oldest current comit by running:
-```javascript
-git log 
-```
-
-Now you should see the latest commits, you will look for the latest commit for the Master branch (HEAD). Copy the yellow commit number , and run the following command:
-
-```javascript
-git checkout YELLOW_COMMIT_NUMBER
-```
+**ft_irc** is a C++98 IRC server project built for the 42 school curriculum.
 
 ---
 
-How to get work from main branch to your desired branch
--
+## 📚 Project Overview
 
-1. Switch to the main branch, and PULL (for good practice), than switch back to the desired branch. 
-2. It's now time for the final step, which is just running the simple comand:
+Internet Relay Chat (IRC) is a text-based protocol for real-time messaging, supporting both public and private communication. This project implements an IRC server, allowing multiple clients to connect, join channels, send messages, and manage channel modes—mimicking the essential behavior of an official IRC server.
 
-```javascript
-git merge origin/main                                       
+---
+
+## 🛠️ Features
+
+- **Multi-client Support:** Handle multiple simultaneous client connections using non-blocking I/O and a single poll (or equivalent).
+- **TCP/IP Communication:** IPv4 and IPv6 support.
+- **Core IRC Functionality:**  
+  - User authentication (password, nickname, username)
+  - Private and channel messaging
+  - Channel creation and management
+  - Channel operator privileges
+- **Supported Channel Modes:**  
+  - `i`: Invite-only channel
+  - `t`: Topic changes restricted to channel operators
+  - `k`: Channel password (key)
+  - `o`: Operator privilege management
+  - `l`: User limit per channel
+- **Operator Commands:**  
+  - `KICK` – Remove a client from a channel
+  - `INVITE` – Invite a client to a channel
+  - `TOPIC` – Change/view channel topic
+  - `MODE` – Change channel modes
+- **Robust Error Handling:** Gracefully manages partial/fragmented data and connection issues.
+- **IRC Client Compatibility:** Fully compatible with popular IRC clients like irssi and nc.
+
+---
+
+## 🚀 Getting Started
+
+### **Building**
+
+```sh
+make
 ```
 
+### **Running the Server**
 
-##FEEL FREE TO ADD MORE !
+```sh
+./ircserv <port> <password>
+```
+- `<port>`: Port number to listen on (e.g., 6667 or 8080)
+- `<password>`: Connection password required by clients
+
+_Example:_
+```sh
+./ircserv 8080 mypassword
+```
+
+---
+
+## 💻 Connecting with Clients
+
+### **Using irssi**
+```sh
+irssi -c localhost -p 8080 -n mynick -w mypass
+```
+
+### **Using netcat (nc)**
+```sh
+nc localhost 8080
+```
+Then manually enter IRC commands such as:
+```
+PASS mypassword
+NICK mynick
+USER myuser 0 * :My User
+JOIN #mychannel
+```
+
+---
+
+## 📝 Example IRC Commands
+
+| Command                    | Example usage                   |
+|----------------------------|---------------------------------|
+| Set invite-only            | MODE #chan +i                   |
+| Set password               | MODE #chan +k secretpass        |
+| Give operator privilege    | MODE #chan +o nick              |
+| Set user limit             | MODE #chan +l 10                |
+| Restrict topic changes     | MODE #chan +t                   |
+| Remove invite-only         | MODE #chan -i                   |
+| Remove password            | MODE #chan -k                   |
+| Remove operator privilege  | MODE #chan -o nick              |
+| Remove user limit          | MODE #chan -l                   |
+
+---
+
+## ⚙️ Project Requirements (Summary)
+
+- **No forking**—single non-blocking poll (or equivalent) for all I/O.
+- **No external/Boost libraries.**
+- **C++98 standard compliance.**
+- **Robust—should not crash under any circumstance.**
+- **Reference client compatibility required (choose your own, e.g., irssi).**
+- **Makefile with standard rules (`all`, `clean`, `fclean`, `re`).**
+
+---
+
+## 🏆 Implemented Bonus Ideas
+
+- File transfer support
+- IRC bot functionality
+
+---
+
+## 👨‍💻 Authors
+
+- [**Tudor Ursescu**](https://github.com/Tudor-Ursescu)
+
+- [**Hryhorii Zakharchenko**](https://github.com/grysha11)
+
+- [**Tudor Lupu**](https://github.com/DRACULATudor)
+
+---
+
+## 📄 License
+
+This project is for educational purposes within the 42 school curriculum.
+
 ---
