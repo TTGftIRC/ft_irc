@@ -58,9 +58,36 @@ bool Bot::initBot() {
     return true;
 }
 
+cmds Bot::getCommandEnum(std::string message) {
+    if (message == "!help") return HELP;
+    if (message == "!hello") return HELLO;
+    if (message == "!time") return TIME;
+    if (message == "!dice") return DICE;
+    if (message == "!coin") return COIN;
+    return UNKNOWN;
+}
+
 void Bot::handleMessage(std::string line) {
-    (void)line;
-    return;
+    size_t pos;
+    if ((pos = line.find("PING")) != std::string::npos) {
+        sendMessage("PONG :" + line.substr(pos, line.length()));
+        return;
+    }
+
+    if ((pos = line.find("PRIVMSG")) == std::string::npos) {
+        return;
+    }
+    std::string messages[];
+
+    message = line.substr(pos + 9, line.length());
+    if ((pos = message.find("!")) != std::string::npos) {
+        cmds command = getCommandEnum(message);
+        switch (command) {
+            case HELP: {
+                
+            }
+        }
+    }
 }
 
 void Bot::loopBot() {

@@ -14,6 +14,15 @@
 
 #define MAX_SIZE 512
 
+enum cmds {
+    HELP,
+    HELLO,
+    TIME,
+    DICE,
+    COIN,
+    UNKNOWN
+};
+
 class Bot {
     private:
         bool *_sig;
@@ -25,6 +34,7 @@ class Bot {
         void loopBot();
         void loginBot();
         void makeNonBlock();
+        cmds getCommandEnum(std::string message);
         void sendMessage(const std::string& msg);
         void handleMessage(std::string line);
     public:
