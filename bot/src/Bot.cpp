@@ -73,16 +73,44 @@ cmds getCommandEnum(std::string message) {
     return UNKNOWN;
 }
 
+// parsedMsg parseLine(const std::string& line) {
+//     std::istringstream iss(line);
+//     parsedMsg result; // empty struct
+//     std::string token;
+//     while (iss >> token) {
+//         if (token[0] == '!') {
+//             result.command = token;
+//             break;
+//         } else {
+//             if (result.clientNick.empty()) {
+//                 result.clientNick = token;
+//             }
+//         }
+        
+//     }
+//     return result;
+// }
+
 parsedMsg parseLine(const std::string& line) {
-    std::istringstream iss(line);
-    parsedMsg result; // empty struct
-    std::string token;
-    while (iss >> token) {
-        if (token[0] == '!') {
-            result.command = token;
-            break;
+    parsedMsg result;
+    if (line.size() > 0 && line[0] == ':') {
+        size_t endPrefix = line.find(' ');
+        if (endPrefix != std::string::npos) {
+            std::string prefix = line.substr(1, endPrefix - 1); // remove ':'
+            size_t excl = prefix.find('!');
+            if (excl != std::string::npos) {
+                result.clientNick = prefix.substr(0, excl);
+            } else {
+                result.clientNick = prefix;
+            }
+            size_t privmsgPos = line.find("PRIVMSG");
+            if (privmsgPos != std::string::npos) {
+                size_t colonPos = line.find(":", privmsgPos);
+                if (colonPos != std::string::npos) {
+                    result.command = line.substr(colonPos + 1);
+                }
+            }
         }
-        result.clientNick = token;
     }
     return result;
 }
@@ -97,10 +125,7 @@ void Bot::handleMessage(std::string line) {
     if ((pos = line.find("PRIVMSG")) == std::string::npos) {
         return;
     }
-    std::string message;
-
-    message = line.substr(pos + 7, line.length());
-    parsedMsg parsed = parseLine(message);
+    parsedMsg parsed = parseLine(line);
     std::cout << "parsed: " << parsed.command << " " << parsed.clientNick << std::endl;
     cmds CommandEnum = getCommandEnum(parsed.command);
     switch (CommandEnum) {
@@ -109,7 +134,7 @@ void Bot::handleMessage(std::string line) {
             break;
         }
         case HELLO: {
-            sendMsgToClient("hello", parsed.clientNick);
+            sendMsgToClient("hello " + parsed.clientNick, parsed.clientNick);
             break;
         }
         case TIME: {
