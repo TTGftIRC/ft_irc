@@ -16,7 +16,13 @@ Bot::~Bot() {}
 
 void Bot::sendMessage(const std::string& msg) {
     std::string out = msg + "\r\n";
-    send(_socket, out.c_str(), out.size(), 0);
+    if (send(_socket, out.c_str(), out.size(), 0) < 0) {
+        throw SuperException("send() failed");
+    }
+}
+
+void Bot::sendMsgToClient(const std::string msg, const std::string nick) {
+    sendMessage("PRIVMSG " + nick + " :" + msg);
 }
 
 void Bot::loginBot() {
@@ -95,15 +101,19 @@ void Bot::handleMessage(std::string line) {
 
     message = line.substr(pos + 7, line.length());
     parsedMsg parsed = parseLine(message);
+    std::cout << "parsed: " << parsed.command << " " << parsed.clientNick << std::endl;
     cmds CommandEnum = getCommandEnum(parsed.command);
     switch (CommandEnum) {
         case HELP: {
+            
             break;
         }
         case HELLO: {
+            sendMsgToClient("hello", parsed.clientNick);
             break;
         }
         case TIME: {
+
             break;
         }
         case DICE: {
@@ -113,6 +123,7 @@ void Bot::handleMessage(std::string line) {
             break;
         }
         case UNKNOWN: {
+            sendMsgToClient("try !help", parsed.clientNick);
             break;
         }
         default: {

@@ -45,6 +45,7 @@ class Bot {
         void makeNonBlock();
         void sendMessage(const std::string& msg);
         void handleMessage(std::string line);
+        void sendMsgToClient(const std::string msg, const std::string nick);
     public:
         class SuperException : public std::exception {
             private:
