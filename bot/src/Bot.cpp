@@ -6,6 +6,12 @@ Bot::SuperException::~SuperException() throw() {}
 
 const char* Bot::SuperException::what() const throw() { return msg.c_str(); }
 
+std::string Bot::intToStr(int num) {
+    std::stringstream stream;
+	stream << num;
+	return stream.str();
+}
+
 Bot::Bot(int port, std::string pass, bool *sig) : _sig(sig), _port(port), _pass(pass), _socket(-1) {
     if (initBot()) {
         loopBot();
@@ -16,7 +22,13 @@ Bot::~Bot() {}
 
 void Bot::sendMessage(const std::string& msg) {
     std::string out = msg + "\r\n";
-    send(_socket, out.c_str(), out.size(), 0);
+    if (send(_socket, out.c_str(), out.size(), 0) < 0) {
+        throw SuperException("send() failed");
+    }
+}
+
+void Bot::sendMsgToClient(const std::string msg, const std::string nick) {
+    sendMessage("PRIVMSG " + nick + " :" + msg);
 }
 
 void Bot::loginBot() {
@@ -58,9 +70,92 @@ bool Bot::initBot() {
     return true;
 }
 
+cmds getCommandEnum(std::string message) {
+    if (message == "!help") return HELP;
+    if (message == "!hello") return HELLO;
+    if (message == "!time") return TIME;
+    if (message == "!dice") return DICE;
+    if (message == "!coin") return COIN;
+    return UNKNOWN;
+}
+
+parsedMsg parseLine(const std::string& line) {
+    parsedMsg result;
+    if (line.size() > 0 && line[0] == ':') {
+        size_t endPrefix = line.find(' ');
+        if (endPrefix != std::string::npos) {
+            std::string prefix = line.substr(1, endPrefix - 1); // remove ':'
+            size_t excl = prefix.find('!');
+            if (excl != std::string::npos) {
+                result.clientNick = prefix.substr(0, excl);
+            } else {
+                result.clientNick = prefix;
+            }
+            size_t privmsgPos = line.find("PRIVMSG");
+            if (privmsgPos != std::string::npos) {
+                size_t colonPos = line.find(":", privmsgPos);
+                if (colonPos != std::string::npos) {
+                    result.command = line.substr(colonPos + 1);
+                }
+            }
+        }
+    }
+    return result;
+}
+
 void Bot::handleMessage(std::string line) {
-    (void)line;
-    return;
+    size_t pos;
+    if ((pos = line.find("PING")) != std::string::npos) {
+        sendMessage("PONG :" + line.substr(pos, line.length()));
+        return;
+    }
+
+    if ((pos = line.find("PRIVMSG")) == std::string::npos) {
+        return;
+    }
+    parsedMsg parsed = parseLine(line);
+    std::cout << "parsed: " << parsed.command << " " << parsed.clientNick << std::endl;
+    cmds CommandEnum = getCommandEnum(parsed.command);
+    switch (CommandEnum) {
+        case HELP: {
+            sendMsgToClient("Usage of Bot42:", parsed.clientNick);
+            sendMsgToClient("!hello    -     Says hello message to you.", parsed.clientNick);
+            sendMsgToClient("!time     -     Shows current local time.", parsed.clientNick);
+            sendMsgToClient("!dice     -     Throws a dice", parsed.clientNick);
+            sendMsgToClient("!coin     -     Throws a coin", parsed.clientNick);
+            sendMsgToClient("Try to use my commands!", parsed.clientNick);
+            break;
+        }
+        case HELLO: {
+            sendMsgToClient("hello " + parsed.clientNick, parsed.clientNick);
+            break;
+        }
+        case TIME: {
+            std::time_t now = std::time(NULL);
+            std::string curr_time = std::ctime(&now);
+            if (!curr_time.empty() && curr_time[curr_time.size() - 1] == '\n') {
+                curr_time.erase(curr_time.size() - 1);
+            }
+            sendMsgToClient("Current time: " + curr_time, parsed.clientNick);
+            break;
+        }
+        case DICE: {
+            sendMsgToClient("Throwing a dice... " + intToStr(rand() % 6 + 1), parsed.clientNick);
+            break;
+        }
+        case COIN: {
+            std::string result = (rand() % 2 == 0) ? "heads" : "tails";
+            sendMsgToClient("Flipping a coin... " + result, parsed.clientNick);
+            break;
+        }
+        case UNKNOWN: {
+            sendMsgToClient("try !help", parsed.clientNick);
+            break;
+        }
+        default: {
+            break;
+        }
+    }
 }
 
 void Bot::loopBot() {
