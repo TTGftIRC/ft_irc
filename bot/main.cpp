@@ -1,7 +1,6 @@
-#include "inc/Server.hpp"
-#include "inc/Command.hpp"
+#include "inc/Bot.hpp"
 
-volatile sig_atomic_t sig_received = 0;
+bool sig_recieved = false;
 
 bool isNum(const char* input) {
     for (size_t i = 0; input[i] != '\0'; i++) {
@@ -14,17 +13,16 @@ bool isNum(const char* input) {
 
 void handle_sig(int signal) {
     (void)signal;
-    sig_received = 1;
+    sig_recieved = true;
 }
 
 int main(int ac, char **av) {
     int port;
     std::string pass;
     std::signal(SIGINT, handle_sig);
-    std::signal(SIGTERM, handle_sig);
 
     if (ac != 3) {
-        std::cerr << "Error: invalid amount of arguments: try ./ircserv PORT PASSWORD" << std::endl;
+        std::cerr << "Erorr: invalid amount of arguments: try ./bot PORT PASSWORD" << std::endl;
         return 1;
     }
     pass = av[2];
@@ -33,9 +31,12 @@ int main(int ac, char **av) {
         std::cerr << "Error: Invalid port" << std::endl;
         return 1;
     }
-    
-    Server server;
-    server.setPass(pass);
-    server.setPort(port);
-    server.startServer();
+
+    try {
+        Bot bot(port, pass, &sig_recieved);
+    } catch (const std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        return 1;
+    }
+    return 0;
 }
