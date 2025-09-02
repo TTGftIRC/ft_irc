@@ -52,7 +52,7 @@ bool Server::RecvData(int i, Client *curr){
     char buffer[10240] = {0};
     ssize_t bytes_read = recv(_poll_fds[i].fd, buffer, sizeof(buffer), 0);
     if (bytes_read > 0) {
-        std::cout << "recv data: " << std::string(buffer, bytes_read) << std::endl;
+        // std::cout << "recv data: " << std::string(buffer, bytes_read) << std::endl;
         curr->appendRecvData(buffer, bytes_read);
         std::string cmd;
         while (!(cmd = curr->extractLineFromRecv()).empty()) {
@@ -78,7 +78,7 @@ bool Server::SendData(int i, Client *curr){
     }
     std::string& data_to_send = curr->getSendBuf();
 
-    std::cout << "curr->getSendBuf(): " << curr->getSendBuf() << std::endl;
+    // std::cout << "curr->getSendBuf(): " << curr->getSendBuf() << std::endl;
 
     ssize_t bytes = send(_poll_fds[i].fd, data_to_send.data(), data_to_send.size(), 0);
 

@@ -114,7 +114,7 @@ void Bot::handleMessage(std::string line) {
         return;
     }
     parsedMsg parsed = parseLine(line);
-    std::cout << "parsed: " << parsed.command << " " << parsed.clientNick << std::endl;
+    // std::cout << "parsed: " << parsed.command << " " << parsed.clientNick << std::endl;
     cmds CommandEnum = getCommandEnum(parsed.command);
     switch (CommandEnum) {
         case HELP: {
@@ -189,7 +189,7 @@ void Bot::loopBot() {
                 std::string line = _recv_buffer.substr(0, pos);
                 _recv_buffer.erase(0, pos + 2);
     
-                std::cout << "recieved data: " << line << std::endl;
+                // std::cout << "recieved data: " << line << std::endl;
     
                 if (login == 1) {
                     if (line.find(":ircserver 464") != std::string::npos) {
