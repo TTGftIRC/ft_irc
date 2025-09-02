@@ -136,7 +136,7 @@ void Server::runPoll() {
     while (!sig_received) {
         int ret =listenPoll(_poll_fds.data(), _poll_fds.size(), timeout_ms);
         if (ret < 0) {
-            if (errno == EINTR && sig_received) {
+            if (sig_received) {
                 break;
             }
             std::cerr << "Error: poll has failed" << std::endl;
