@@ -157,6 +157,7 @@ bool _handleClientMessage(Server& server, Client* client, const std::string& cmd
             pingCommand.execute(server, parsed);
             break;
         }
+        // ctrl + Z to susspend a client process and write "fg" (forground) to restore the client session
         case CAP: {
             CapCommand capCommand;
             capCommand.execute(server, parsed);
@@ -523,10 +524,6 @@ void PartCommand::execute(Server& server, const parsedCmd& _parsedCmd) const {
                 if (newOP) {
                     channel->addOperator(newOP->getNickname());
                     channel->broadcast("\n" + newOP->getNickname() + " has become an opperator\r\n");
-                    //!!! will change this message , but for now i care about functionality
-                    //!!! maybe need to make the message look like a MODE +o message
-                    //std::string modeMsg = ":ircserver MODE " + channelName + " +o " + newOP->getNickname() + "\r\n";
-                    // channel->broadcast(modeMsg);
                 }
         }
         //if no one remains, delete channel
